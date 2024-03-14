@@ -29,7 +29,7 @@ public class Libro {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "libro", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LibroGenero> generos;
 
-    @OneToMany(mappedBy = "libro", cascade = CascadeType.ALL)
-    private List<BibliotecaLibro> bibliotecaLibros;
+    //@OneToMany(mappedBy = "libro", cascade = CascadeType.ALL)
+    //private List<BibliotecaLibro> bibliotecaLibros;
 
 }

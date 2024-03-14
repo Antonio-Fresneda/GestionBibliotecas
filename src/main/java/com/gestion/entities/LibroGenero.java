@@ -11,14 +11,14 @@ public class LibroGenero {
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     private long id;
+    private long generoId;
+    @Transient
+    private String generoNombre;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "libro_id")
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY,targetEntity = Libro.class)
+    @JoinColumn(name = "customerId", nullable = true)
     private Libro libro;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "genero_id")
-    private Genero genero;
 
 
 }

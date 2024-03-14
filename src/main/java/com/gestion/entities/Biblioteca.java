@@ -23,6 +23,6 @@ public class Biblioteca {
 	private String email;
 	private String sitioWeb;
 
-	@OneToMany(mappedBy = "biblioteca", cascade = CascadeType.ALL)
-	private List<BibliotecaLibro> bibliotecaLibros;
+	//@OneToMany(mappedBy = "biblioteca", cascade = CascadeType.ALL)
+	//private List<BibliotecaLibro> bibliotecaLibros;
 }

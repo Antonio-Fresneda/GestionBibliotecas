@@ -1,8 +1,12 @@
 package com.gestion.repository;
 
+import com.gestion.entities.Autor;
 import com.gestion.entities.Genero;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -19,4 +23,11 @@ public interface GeneroRepository extends JpaRepository<Genero, Long> {
     @Query("SELECT g FROM Genero g WHERE g.urlWikipedia = ?1")
     List<Genero> findAllByUrlWikipedia(String urlWikipedia);
 
+    @Query("SELECT a FROM Genero a ORDER BY " +
+            "CASE WHEN :orderBy = 'nombre' THEN a.nombre " +
+            "WHEN :orderBy = 'descripcion' THEN a.descripcion " +
+            "WHEN :orderBy = 'edadRecomendada' THEN a.edadRecomendada " +
+            "WHEN :orderBy = 'urlWikipedia' THEN a.urlWikipedia " +
+            "ELSE a.id END ASC")
+    Page<Genero> findAllGeneroOrderedBy(@Param("orderBy") String orderBy, Pageable pageable);
 }

@@ -10,6 +10,10 @@ import com.gestion.repository.BibliotecaRepository;
 import com.gestion.repository.GeneroRepository;
 import com.gestion.repository.LibroRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,9 +56,24 @@ public class BibliotecaRestController {
     public List<Biblioteca> getBibliotecaPorEmail(@RequestParam(name = "email") String email) {
         return bibliotecaRepository.findAllByEmail(email);
     }
+
     @GetMapping("/por-sitioWeb")
     public List<Biblioteca> getBibliotecaPorWeb(@RequestParam(name = "sitioWeb") String sitioWeb) {
         return bibliotecaRepository.findAllByWeb(sitioWeb);
+    }
+
+    @GetMapping("/Ordenar")
+    public ResponseEntity<List<Biblioteca>> getOrderBiblioteca(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nombre") String orderBy) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Biblioteca> bibliotecaPage = bibliotecaRepository.findAllBibliotecaOrderedBy(orderBy, pageable);
+
+        List<Biblioteca> bibliotecaList = bibliotecaPage.getContent();
+
+        return new ResponseEntity<>(bibliotecaList, HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
@@ -86,70 +105,88 @@ public class BibliotecaRestController {
         return ResponseEntity.ok().build();
     }
 }
-    @RestController
-    @RequestMapping("/libro")
-    class LibroRestController {
 
-        @Autowired
-        LibroRepository libroRepository;
+@RestController
+@RequestMapping("/libro")
+class LibroRestController {
 
-        @GetMapping()
-        public List<Libro> list() {
-            return libroRepository.findAll();
-        }
+    @Autowired
+    LibroRepository libroRepository;
 
-        @GetMapping("/{id}")
-        public Libro get(@PathVariable(name = "id") long id) {
-            return libroRepository.findById(id).get();
-        }
-
-        @PutMapping("/{id}")
-        public ResponseEntity<?> put(@PathVariable(name = "id") long id, @RequestBody Libro input) {
-            Libro find = libroRepository.findById(id).get();
-            if (find != null) {
-                find.setTitulo(input.getTitulo());
-                find.setAnoPublicacion(input.getAnoPublicacion());
-                find.setIsbn(input.getIsbn());
-            }
-            Libro save = libroRepository.save(find);
-            return ResponseEntity.ok(save);
-        }
-        @GetMapping("/por-titulo")
-        public List<Libro> getLibrosPorTitulo(@RequestParam(name = "titulo") String titulo) {
-            return libroRepository.findAllByTitulo(titulo);
-        }
-
-        @GetMapping("/por-ano-publicacion")
-        public List<Libro> getLibrosPorAnoPublicacion(@RequestParam(name = "anoPublicacion") int anoPublicacion) {
-            return libroRepository.findAllByAnoPublicacion(anoPublicacion);
-        }
-
-        @GetMapping("/por-isbn")
-        public List<Libro> getLibrosPorISBN(@RequestParam(name = "isbn") String isbn) {
-            return libroRepository.findAllByIsbn(isbn);
-        }
-
-        @GetMapping("/por-autor")
-        public List<Libro> getLibrosPorAutor(@RequestParam(name = "autor") Autor autor) {
-            return libroRepository.findAllByAutor(autor);
-        }
-
-        @PostMapping
-        public ResponseEntity<?> post(@RequestBody Libro input) {
-            input.getGeneros().forEach(x -> x.setLibro(input));
-            Libro save = libroRepository.save(input);
-            return ResponseEntity.ok(save);
-        }
-
-        @DeleteMapping("/{id}")
-        public ResponseEntity<?> delete(@PathVariable(name = "id") long id) {
-            Optional<Libro> findById = libroRepository.findById(id);
-            if (findById.get() != null) {
-                libroRepository.delete(findById.get());
-            }
-            return ResponseEntity.ok().build();
-        }
+    @GetMapping()
+    public List<Libro> list() {
+        return libroRepository.findAll();
     }
+
+    @GetMapping("/{id}")
+    public Libro get(@PathVariable(name = "id") long id) {
+        return libroRepository.findById(id).get();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> put(@PathVariable(name = "id") long id, @RequestBody Libro input) {
+        Libro find = libroRepository.findById(id).get();
+        if (find != null) {
+            find.setTitulo(input.getTitulo());
+            find.setAnoPublicacion(input.getAnoPublicacion());
+            find.setIsbn(input.getIsbn());
+        }
+        Libro save = libroRepository.save(find);
+        return ResponseEntity.ok(save);
+    }
+
+    @GetMapping("/por-titulo")
+    public List<Libro> getLibrosPorTitulo(@RequestParam(name = "titulo") String titulo) {
+        return libroRepository.findAllByTitulo(titulo);
+    }
+
+    @GetMapping("/por-ano-publicacion")
+    public List<Libro> getLibrosPorAnoPublicacion(@RequestParam(name = "anoPublicacion") int anoPublicacion) {
+        return libroRepository.findAllByAnoPublicacion(anoPublicacion);
+    }
+
+    @GetMapping("/por-isbn")
+    public List<Libro> getLibrosPorISBN(@RequestParam(name = "isbn") String isbn) {
+        return libroRepository.findAllByIsbn(isbn);
+    }
+
+    @GetMapping("/por-autor")
+    public List<Libro> getLibrosPorAutor(@RequestParam(name = "autor") Autor autor) {
+        return libroRepository.findAllByAutor(autor);
+    }
+
+    @GetMapping("/Ordenar")
+    public ResponseEntity<List<Libro>> getOrderLibro(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nombre") String orderBy) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Libro> libroPage = libroRepository.findAllLibroOrderedBy(orderBy, pageable);
+
+        List<Libro> libroList = libroPage.getContent();
+
+        return new ResponseEntity<>(libroList, HttpStatus.OK);
+    }
+
+    @PostMapping
+    public ResponseEntity<?> post(@RequestBody Libro input) {
+        input.getGeneros().forEach(x -> x.setLibro(input));
+        Libro save = libroRepository.save(input);
+        return ResponseEntity.ok(save);
+    }
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable(name = "id") long id) {
+        Optional<Libro> findById = libroRepository.findById(id);
+        if (findById.get() != null) {
+            libroRepository.delete(findById.get());
+        }
+        return ResponseEntity.ok().build();
+    }
+}
+
 @RestController
 @RequestMapping("/genero")
 class GeneroRestController {
@@ -186,6 +223,20 @@ class GeneroRestController {
     public List<Genero> getGenerosPorUrlWikipedia(@RequestParam(name = "urlWikipedia") String urlWikipedia) {
         return generoRepository.findAllByUrlWikipedia(urlWikipedia);
     }
+    @GetMapping("/Ordenar")
+    public ResponseEntity<List<Genero>> getOrderGenero(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nombre") String orderBy) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Genero> generosPage = generoRepository.findAllGeneroOrderedBy(orderBy, pageable);
+
+        List<Genero> generosList = generosPage.getContent();
+
+        return new ResponseEntity<>(generosList, HttpStatus.OK);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> put(@PathVariable(name = "id") long id, @RequestBody Genero input) {
         Genero find = generoRepository.findById(id).orElse(null);
@@ -221,6 +272,8 @@ class AutorRestController {
 
     @Autowired
     AutorRepository autorRepository;
+    @Autowired
+    LibroRepository libroRepository;
 
     @GetMapping()
     public List<Autor> list() {
@@ -247,6 +300,20 @@ class AutorRestController {
         return autorRepository.findAllByNacionalidad(nacionalidad);
     }
 
+    @GetMapping("/Ordenar")
+    public ResponseEntity<List<Autor>> getAllAutores(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nombre") String orderBy) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Autor> autoresPage = autorRepository.findAllOrderedBy(orderBy, pageable);
+
+        List<Autor> autoresList = autoresPage.getContent();
+
+        return new ResponseEntity<>(autoresList, HttpStatus.OK);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> put(@PathVariable(name = "id") long id, @RequestBody Autor input) {
         Autor find = autorRepository.findById(id).orElse(null);
@@ -265,14 +332,23 @@ class AutorRestController {
         return ResponseEntity.ok(save);
     }
 
-    @DeleteMapping("/{id}")
+   /* @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable(name = "id") long id) {
         Optional<Autor> findById = autorRepository.findById(id);
         if (findById.isPresent()) {
-            autorRepository.delete(findById.get());
+            Autor autor = findById.get();
+            // Eliminar los libros asociados a este autor
+            List<Libro> libros = autor.getLibros();
+            for (Libro libro : libros) {
+                libroRepository.delete(libro);
+            }
+            // Finalmente, eliminar al autor
+            autorRepository.delete(autor);
         }
         return ResponseEntity.ok().build();
     }
+
+    */
 }
 
 

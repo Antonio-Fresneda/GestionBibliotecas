@@ -31,16 +31,9 @@ public class Autor {
 
     private String nacionalidad;
 
-    @OneToMany(mappedBy = "autor", cascade = CascadeType.ALL)
-    private List<Libro> libros;
-
-    @JsonCreator
-    public Autor(@JsonProperty("nombre") String nombre,
-                 @JsonProperty("fechaNacimiento") @JsonFormat(pattern = "yyyy-MM-dd") Date fechaNacimiento,
-                 @JsonProperty("nacionalidad") String nacionalidad) {
-        this.nombre = nombre;
-        this.fechaNacimiento = fechaNacimiento;
-        this.nacionalidad = nacionalidad;
-    }
+    //@OneToMany(mappedBy = "autor", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    //private List<Libro> libros;
 }
+
+
 

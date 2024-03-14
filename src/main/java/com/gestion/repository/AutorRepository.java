@@ -2,8 +2,11 @@ package com.gestion.repository;
 
 import com.gestion.entities.Autor;
 import com.gestion.entities.Biblioteca;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Date;
 import java.util.List;
@@ -17,4 +20,12 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
 
     @Query("SELECT a FROM Autor a WHERE a.nacionalidad = ?1")
     List<Autor> findAllByNacionalidad(String nacionalidad);
+
+    @Query("SELECT a FROM Autor a ORDER BY " +
+            "CASE WHEN :orderBy = 'nombre' THEN a.nombre " +
+            "WHEN :orderBy = 'fechaNacimiento' THEN a.fechaNacimiento " +
+            "WHEN :orderBy = 'nacionalidad' THEN a.nacionalidad " +
+            "ELSE a.id END ASC")
+    Page<Autor> findAllOrderedBy(@Param("orderBy") String orderBy, Pageable pageable);
 }
+
