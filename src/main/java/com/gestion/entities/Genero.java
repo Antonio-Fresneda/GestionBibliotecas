@@ -1,31 +1,26 @@
 package com.gestion.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.*;
 import lombok.Data;
-import jakarta.persistence.Id;
+
+import java.util.List;
 
 @Entity
 @Data
-
+@Table(name = "genero")
 public class Genero {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String nombre;
+
+    @Column(nullable = false)
     private String descripcion;
+
     private String edadRecomendada;
     private String urlWikipedia;
 
-    /*@ManyToMany
-    @JoinTable(
-            name = "libros_géneros",
-            joinColumns = @JoinColumn(name = "género_id"),
-            inverseJoinColumns = @JoinColumn(name = "libro_id")
-    )
-    private List<Libro> libros;
-
-     */
 }

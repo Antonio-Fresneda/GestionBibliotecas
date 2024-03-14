@@ -1,28 +1,35 @@
 package com.gestion.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.*;
 import lombok.Data;
-import jakarta.persistence.Id;
+
+import java.util.List;
 
 
 @Entity
 @Data
+@Table(name = "libro")
 public class Libro {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String título;
+    @Column(nullable = false)
+    private String titulo;
+
+    @Column(nullable = false)
     private int anoPublicacion;
+
     private String isbn;
 
-    //@ManyToOne
-    //@JoinColumn(name = "autor_id")
-    //private Autor autor;
+    @ManyToOne
+    @JoinColumn(name = "autor_id")
+    private Autor autor;
 
-    //@ManyToMany(mappedBy = "libros")
-    //private List<Género> géneros;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "libro", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<LibroGenero> generos;
+
+    @OneToMany(mappedBy = "libro", cascade = CascadeType.ALL)
+    private List<BibliotecaLibro> bibliotecaLibros;
 
 }

@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +31,30 @@ public class BibliotecaRestController {
     @GetMapping("/{id}")
     public Biblioteca get(@PathVariable(name = "id") long id) {
         return bibliotecaRepository.findById(id).get();
+    }
+
+    @GetMapping("/por-nombre")
+    public List<Biblioteca> getBibliotecaPorNombres(@RequestParam(name = "nombre") String nombre) {
+        return bibliotecaRepository.findAllByNombre(nombre);
+    }
+
+    @GetMapping("/por-direccion")
+    public List<Biblioteca> getBibliotecaPorDireccion(@RequestParam(name = "direccion") String direccion) {
+        return bibliotecaRepository.findAllByDireccion(direccion);
+    }
+
+    @GetMapping("/por-telefono")
+    public List<Biblioteca> getBibliotecaPorTelefono(@RequestParam(name = "telefono") String telefono) {
+        return bibliotecaRepository.findAllByTelefono(telefono);
+    }
+
+    @GetMapping("/por-email")
+    public List<Biblioteca> getBibliotecaPorEmail(@RequestParam(name = "email") String email) {
+        return bibliotecaRepository.findAllByEmail(email);
+    }
+    @GetMapping("/por-sitioWeb")
+    public List<Biblioteca> getBibliotecaPorWeb(@RequestParam(name = "sitioWeb") String sitioWeb) {
+        return bibliotecaRepository.findAllByWeb(sitioWeb);
     }
 
     @PutMapping("/{id}")
@@ -82,16 +107,36 @@ public class BibliotecaRestController {
         public ResponseEntity<?> put(@PathVariable(name = "id") long id, @RequestBody Libro input) {
             Libro find = libroRepository.findById(id).get();
             if (find != null) {
-                find.setTítulo(input.getTítulo());
+                find.setTitulo(input.getTitulo());
                 find.setAnoPublicacion(input.getAnoPublicacion());
                 find.setIsbn(input.getIsbn());
             }
             Libro save = libroRepository.save(find);
             return ResponseEntity.ok(save);
         }
+        @GetMapping("/por-titulo")
+        public List<Libro> getLibrosPorTitulo(@RequestParam(name = "titulo") String titulo) {
+            return libroRepository.findAllByTitulo(titulo);
+        }
+
+        @GetMapping("/por-ano-publicacion")
+        public List<Libro> getLibrosPorAnoPublicacion(@RequestParam(name = "anoPublicacion") int anoPublicacion) {
+            return libroRepository.findAllByAnoPublicacion(anoPublicacion);
+        }
+
+        @GetMapping("/por-isbn")
+        public List<Libro> getLibrosPorISBN(@RequestParam(name = "isbn") String isbn) {
+            return libroRepository.findAllByIsbn(isbn);
+        }
+
+        @GetMapping("/por-autor")
+        public List<Libro> getLibrosPorAutor(@RequestParam(name = "autor") Autor autor) {
+            return libroRepository.findAllByAutor(autor);
+        }
 
         @PostMapping
         public ResponseEntity<?> post(@RequestBody Libro input) {
+            input.getGeneros().forEach(x -> x.setLibro(input));
             Libro save = libroRepository.save(input);
             return ResponseEntity.ok(save);
         }
@@ -122,6 +167,25 @@ class GeneroRestController {
         return generoRepository.findById(id).orElse(null);
     }
 
+    @GetMapping("/por-nombre")
+    public List<Genero> getGenerosPorNombre(@RequestParam(name = "nombre") String nombre) {
+        return generoRepository.findAllByNombre(nombre);
+    }
+
+    @GetMapping("/por-descripcion")
+    public List<Genero> getGenerosPorDescripcion(@RequestParam(name = "descripcion") String descripcion) {
+        return generoRepository.findAllByDescripcion(descripcion);
+    }
+
+    @GetMapping("/por-edad-recomendada")
+    public List<Genero> getGenerosPorEdadRecomendada(@RequestParam(name = "edadRecomendada") String edadRecomendada) {
+        return generoRepository.findAllByEdadRecomendada(edadRecomendada);
+    }
+
+    @GetMapping("/por-url-wikipedia")
+    public List<Genero> getGenerosPorUrlWikipedia(@RequestParam(name = "urlWikipedia") String urlWikipedia) {
+        return generoRepository.findAllByUrlWikipedia(urlWikipedia);
+    }
     @PutMapping("/{id}")
     public ResponseEntity<?> put(@PathVariable(name = "id") long id, @RequestBody Genero input) {
         Genero find = generoRepository.findById(id).orElse(null);
@@ -166,6 +230,21 @@ class AutorRestController {
     @GetMapping("/{id}")
     public Autor get(@PathVariable(name = "id") long id) {
         return autorRepository.findById(id).orElse(null);
+    }
+
+    @GetMapping("/autores-por-nombre")
+    public List<Autor> getAutoresPorNombre(@RequestParam(name = "nombre") String nombre) {
+        return autorRepository.findAllByNombre(nombre);
+    }
+
+    @GetMapping("/autores-por-fecha-nacimiento")
+    public List<Autor> getAutoresPorFechaNacimiento(@RequestParam(name = "fechaNacimiento") Date fechaNacimiento) {
+        return autorRepository.findAllByFechaNacimiento(fechaNacimiento);
+    }
+
+    @GetMapping("/autores-por-nacionalidad")
+    public List<Autor> getAutoresPorNacionalidad(@RequestParam(name = "nacionalidad") String nacionalidad) {
+        return autorRepository.findAllByNacionalidad(nacionalidad);
     }
 
     @PutMapping("/{id}")
