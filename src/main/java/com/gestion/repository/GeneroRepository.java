@@ -1,5 +1,6 @@
 package com.gestion.repository;
 
+
 import com.gestion.entities.Autor;
 import com.gestion.entities.Genero;
 import org.springframework.data.domain.Page;
@@ -12,22 +13,48 @@ import java.util.List;
 
 public interface GeneroRepository extends JpaRepository<Genero, Long> {
     @Query("SELECT g FROM Genero g WHERE g.nombre = ?1")
-    List<Genero> findAllByNombre( String nombre);
+    List<Genero> findAllByNombre(String nombre);
 
     @Query("SELECT g FROM Genero g WHERE g.descripcion =?1")
-    List<Genero> findAllByDescripcion( String descripcion);
+    List<Genero> findAllByDescripcion(String descripcion);
 
     @Query("SELECT g FROM Genero g WHERE g.edadRecomendada = ?1")
-    List<Genero> findAllByEdadRecomendada( String edadRecomendada);
+    List<Genero> findAllByEdadRecomendada(String edadRecomendada);
 
     @Query("SELECT g FROM Genero g WHERE g.urlWikipedia = ?1")
     List<Genero> findAllByUrlWikipedia(String urlWikipedia);
 
-    @Query("SELECT a FROM Genero a ORDER BY " +
-            "CASE WHEN :orderBy = 'nombre' THEN a.nombre " +
-            "WHEN :orderBy = 'descripcion' THEN a.descripcion " +
-            "WHEN :orderBy = 'edadRecomendada' THEN a.edadRecomendada " +
-            "WHEN :orderBy = 'urlWikipedia' THEN a.urlWikipedia " +
-            "ELSE a.id END ASC")
-    Page<Genero> findAllGeneroOrderedBy(@Param("orderBy") String orderBy, Pageable pageable);
+    /*@Query(value = "SELECT * FROM Autor ORDER BY " +
+            "CASE " +
+            "WHEN :orderBy = 'nombre' THEN nombre " +
+            "WHEN :orderBy = 'descripcion' THEN descripcion " +
+            "WHEN :orderBy = 'edadRecomendada' THEN edad_recomendada " +
+            "WHEN :orderBy = 'urlWikipedia' THEN url_wikipedia " +
+            "ELSE id END :orderDirection", nativeQuery = true)
+    Page<Autor> findAllGeneroOrderedBy(@Param("orderBy") String orderBy, @Param("orderDirection") String orderDirection, Pageable pageable);
+
+
+     */
+
+    @Query(value = "SELECT * FROM Genero ORDER BY " +
+            "CASE " +
+            "WHEN :orderBy = 'nombre' THEN nombre " +
+            "WHEN :orderBy = 'descripcion' THEN descripcion " +
+            "WHEN :orderBy = 'edadRecomendada' THEN edad_recomendada " +
+            "WHEN :orderBy = 'urlWikipedia' THEN url_wikipedia " +
+            "ELSE id END ASC", nativeQuery = true)
+    Page<Genero> findAllOrderedBy(@Param("orderBy") String orderBy, Pageable pageable);
+
+
+    /*@Query(value = "SELECT * FROM Genero ORDER BY " +
+            "CASE " +
+            "WHEN :orderBy = 'nombre' THEN nombre " +
+            "WHEN :orderBy = 'descripcion' THEN descripcion " +
+            "WHEN :orderBy = 'edadRecomendada' THEN edad_recomendada " +
+            "WHEN :orderBy = 'urlWikipedia' THEN url_wikipedia " +
+            "ELSE id END :orderDirection, nombre", nativeQuery = true)
+    Page<Genero> findAllOrderedBy(@Param("orderBy") String orderBy, @Param("orderDirection") String orderDirection, Pageable pageable);
+
+
+     */
 }

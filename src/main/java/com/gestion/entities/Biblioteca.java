@@ -1,8 +1,10 @@
 package com.gestion.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -23,6 +25,6 @@ public class Biblioteca {
 	private String email;
 	private String sitioWeb;
 
-	//@OneToMany(mappedBy = "biblioteca", cascade = CascadeType.ALL)
-	//private List<BibliotecaLibro> bibliotecaLibros;
+	@OneToMany(mappedBy = "biblioteca")
+	private List<BibliotecaLibro> libroBibliotecas = new ArrayList<>();
 }

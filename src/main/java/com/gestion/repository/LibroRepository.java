@@ -1,8 +1,6 @@
 package com.gestion.repository;
 
-import com.gestion.entities.Autor;
-import com.gestion.entities.Libro;
-import com.gestion.entities.Biblioteca;
+import com.gestion.entities.*;
 import com.gestion.entities.Libro;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,10 +24,19 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
     @Query("SELECT a FROM Libro a WHERE a.autor = ?1")
     List<Libro> findAllByAutor(Autor autor);
 
-    @Query("SELECT a FROM Libro a ORDER BY " +
+   /* @Query("SELECT a FROM Libro a ORDER BY " +
             "CASE WHEN :orderBy = 'titulo' THEN a.titulo " +
             "WHEN :orderBy = 'anoPublicacion' THEN a.anoPublicacion " +
             "WHEN :orderBy = 'isbn' THEN a.isbn " +
             "ELSE a.id END ASC")
     Page<Libro> findAllLibroOrderedBy(@Param("orderBy") String orderBy, Pageable pageable);
+
+    */
+   @Query(value = "SELECT * FROM Libro ORDER BY " +
+           "CASE " +
+           "WHEN :orderBy = 'titulo' THEN titulo " +
+           "WHEN :orderBy = 'anoPublicacion' THEN ano_publicacion " +
+           "WHEN :orderBy = 'isbn' THEN isbn " +
+           "ELSE id END ASC", nativeQuery = true)
+   Page<Libro> findAllOrderedBy(@Param("orderBy") String orderBy, Pageable pageable);
 }

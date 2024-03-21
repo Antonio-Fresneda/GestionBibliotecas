@@ -1,8 +1,10 @@
 package com.gestion.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -22,14 +24,16 @@ public class Libro {
 
     private String isbn;
 
+
     @ManyToOne
     @JoinColumn(name = "autor_id")
     private Autor autor;
 
+
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "libro", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LibroGenero> generos;
 
-    //@OneToMany(mappedBy = "libro", cascade = CascadeType.ALL)
-    //private List<BibliotecaLibro> bibliotecaLibros;
+    @OneToMany(mappedBy = "libro")
+    private List<BibliotecaLibro> libroBibliotecas = new ArrayList<>();
 
 }

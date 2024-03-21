@@ -29,7 +29,7 @@ public interface BibliotecaRepository extends JpaRepository<Biblioteca, Long> {
     @Query("SELECT a FROM Biblioteca a WHERE a.sitioWeb = ?1")
     List<Biblioteca> findAllByWeb(String sitioWeb);
 
-    @Query("SELECT a FROM Biblioteca a ORDER BY " +
+    /*@Query("SELECT a FROM Biblioteca a ORDER BY " +
             "CASE WHEN :orderBy = 'nombre' THEN a.nombre " +
             "WHEN :orderBy = 'direccion' THEN a.direccion " +
             "WHEN :orderBy = 'telefono' THEN a.telefono " +
@@ -37,5 +37,14 @@ public interface BibliotecaRepository extends JpaRepository<Biblioteca, Long> {
             "WHEN :orderBy = 'sitioWeb' THEN a.sitioWeb " +
             "ELSE a.id END ASC")
     Page<Biblioteca> findAllBibliotecaOrderedBy(@Param("orderBy") String orderBy, Pageable pageable);
-
+     */
+    @Query(value = "SELECT * FROM Biblioteca ORDER BY " +
+            "CASE " +
+            "WHEN :orderBy = 'nombre' THEN nombre " +
+            "WHEN :orderBy = 'direccion' THEN direccion " +
+            "WHEN :orderBy = 'telefono' THEN telefono " +
+            "WHEN :orderBy = 'email' THEN email " +
+            "WHEN :orderBy = 'sitioWeb' THEN sitio_web " +
+            "ELSE id END ASC", nativeQuery = true)
+    Page<Biblioteca> findAllOrderedBy(@Param("orderBy") String orderBy, Pageable pageable);
 }

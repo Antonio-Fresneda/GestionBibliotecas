@@ -1,5 +1,6 @@
 package com.gestion.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -7,15 +8,17 @@ import lombok.Data;
 @Entity
 @Table(name = "biblioteca_libro")
 public class BibliotecaLibro {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "biblioteca_id", nullable = false)
+   @Id
+   @GeneratedValue(strategy = GenerationType.IDENTITY)
+   private Long id;
+
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "libro_id")
+    private Libro libro;
+
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "biblioteca_id")
     private Biblioteca biblioteca;
 
-    @ManyToOne
-    @JoinColumn(name = "libro_id", nullable = false)
-    private Libro libro;
 }

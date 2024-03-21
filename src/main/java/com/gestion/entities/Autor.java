@@ -31,8 +31,7 @@ public class Autor {
 
     private String nacionalidad;
 
-    //@OneToMany(mappedBy = "autor", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    //private List<Libro> libros;
+
 }
 
 
