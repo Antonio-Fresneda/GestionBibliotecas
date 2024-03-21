@@ -24,11 +24,9 @@ public class Libro {
 
     private String isbn;
 
-
     @ManyToOne
     @JoinColumn(name = "autor_id")
     private Autor autor;
-
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "libro", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<LibroGenero> generos;

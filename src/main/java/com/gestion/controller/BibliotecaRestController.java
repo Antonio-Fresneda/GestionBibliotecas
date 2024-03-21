@@ -13,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,25 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/biblioteca")
 public class BibliotecaRestController {
+    @Data
+    public class OrderCriteria {
+        private String sortBy;
+        private String valueSortOrder;
+    }
+
+    @Data
+    public class SearchCriteria {
+        private String key;
+        private String operation;
+        private String value;
+    }
+
+    @Data
+    public class PageCriteria {
+        private int pageIndex;
+        private int pageSize;
+    }
+
     @Autowired
     BibliotecaRepository bibliotecaRepository;
 
@@ -39,42 +60,7 @@ public class BibliotecaRestController {
         return bibliotecaRepository.findById(id).get();
     }
 
-    @GetMapping("/por-nombre")
-    public List<Biblioteca> getBibliotecaPorNombres(@RequestParam(name = "nombre") String nombre) {
-        return bibliotecaRepository.findAllByNombre(nombre);
-    }
 
-    @GetMapping("/por-direccion")
-    public List<Biblioteca> getBibliotecaPorDireccion(@RequestParam(name = "direccion") String direccion) {
-        return bibliotecaRepository.findAllByDireccion(direccion);
-    }
-
-    @GetMapping("/por-telefono")
-    public List<Biblioteca> getBibliotecaPorTelefono(@RequestParam(name = "telefono") String telefono) {
-        return bibliotecaRepository.findAllByTelefono(telefono);
-    }
-
-    @GetMapping("/por-email")
-    public List<Biblioteca> getBibliotecaPorEmail(@RequestParam(name = "email") String email) {
-        return bibliotecaRepository.findAllByEmail(email);
-    }
-
-    @GetMapping("/por-sitioWeb")
-    public List<Biblioteca> getBibliotecaPorWeb(@RequestParam(name = "sitioWeb") String sitioWeb) {
-        return bibliotecaRepository.findAllByWeb(sitioWeb);
-    }
-
-    /*@GetMapping("/Ordenar")
-    public ResponseEntity<List<Biblioteca>> getOrderBiblioteca(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "nombre") String orderBy) {
-
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Biblioteca> bibliotecaPage = bibliotecaRepository.findAllBibliotecaOrderedBy(orderBy, pageable);
-
-        List<Biblioteca> bibliotecaList = bibliotecaPage.getContent();
-
-        return new ResponseEntity<>(bibliotecaList, HttpStatus.OK);
-    }
-     */
     @PostMapping("/ordenar")
     public ResponseEntity<Page<Biblioteca>> getAllGeneros(@RequestBody AutorRestController.OrdenamientoRequest ordenamientoRequest) {
         Sort.Direction direction = Sort.Direction.fromString(ordenamientoRequest.getOrderDirection().toUpperCase());
@@ -93,7 +79,7 @@ public class BibliotecaRestController {
             find.setEmail(input.getEmail());
             find.setSitioWeb(input.getSitioWeb());
             find.setLibroBibliotecas(input.getLibroBibliotecas());
-            } else {
+        } else {
             throw new BibliotecaNotFoundException("Biblioteca not found with id: " + id);
         }
         Biblioteca save = bibliotecaRepository.save(find);
@@ -124,6 +110,53 @@ public class BibliotecaRestController {
         }
         return ResponseEntity.ok().build();
     }
+    @GetMapping("/filtros")
+    public Page<Biblioteca> busquedaDinamica(
+            @RequestParam(name = "nombre", required = false) String nombre,
+            @RequestParam(name = "direccion", required = false) String direccion,
+            @RequestParam(name = "telefono", required = false) String telefono,
+            @RequestParam(name = "email", required = false) String email,
+            @RequestParam(name = "sitioWeb", required = false) String sitioWeb,
+            @RequestParam(name = "direccion", defaultValue = "asc") String direccionOrden,
+            @RequestParam(name = "pagina", defaultValue = "0") int pagina,
+            @RequestParam(name = "tamanoPagina", defaultValue = "10") int tamanoPagina) {
+
+        Sort.Direction direction = Sort.Direction.ASC;
+        if (direccionOrden.equalsIgnoreCase("desc")) {
+            direction = Sort.Direction.DESC;
+        }
+
+        PageRequest pageRequest = PageRequest.of(pagina, tamanoPagina, Sort.by(direction, "nombre"));
+
+        if (nombre != null && !nombre.isEmpty()) {
+            if (direccion != null && !direccion.isEmpty()) {
+                if (telefono != null && !telefono.isEmpty()) {
+                    if (email != null && !email.isEmpty()) {
+                        if (sitioWeb != null && !sitioWeb.isEmpty()) {
+                            // Todos los parámetros están presentes
+                            return bibliotecaRepository.findAllByNombreContainingAndDireccionContainingAndTelefonoContainingAndEmailContainingAndSitioWebContaining(nombre, direccion, telefono, email, sitioWeb, pageRequest);
+                        } else {
+                            // Sitio web no especificado
+                            return bibliotecaRepository.findAllByNombreContainingAndDireccionContainingAndTelefonoContainingAndEmailContaining(nombre, direccion, telefono, email, pageRequest);
+                        }
+                    } else {
+                        // Email no especificado
+                        return bibliotecaRepository.findAllByNombreContainingAndDireccionContainingAndTelefonoContaining(nombre, direccion, telefono, pageRequest);
+                    }
+                } else {
+                    // Teléfono no especificado
+                    return bibliotecaRepository.findAllByNombreContainingAndDireccionContaining(nombre, direccion, pageRequest);
+                }
+            } else {
+                // Dirección no especificada
+                return bibliotecaRepository.findAllByNombreContaining(nombre, pageRequest);
+            }
+        } else {
+            // Nombre no especificado
+            return bibliotecaRepository.findAll(pageRequest);
+        }
+    }
+
 }
 
 @RestController
@@ -168,46 +201,13 @@ class LibroRestController {
     }
 
 
-    @GetMapping("/por-titulo")
-    public List<Libro> getLibrosPorTitulo(@RequestParam(name = "titulo") String titulo) {
-        return libroRepository.findAllByTitulo(titulo);
+    @PostMapping("/ordenar")
+    public ResponseEntity<Page<Libro>> getAllGeneros(@RequestBody AutorRestController.OrdenamientoRequest ordenamientoRequest) {
+        Sort.Direction direction = Sort.Direction.fromString(ordenamientoRequest.getOrderDirection().toUpperCase());
+        Pageable pageable = PageRequest.of(ordenamientoRequest.getPage(), ordenamientoRequest.getSize(), direction, ordenamientoRequest.getOrderBy());
+        Page<Libro> autoresPage = libroRepository.findAllOrderedBy(ordenamientoRequest.getOrderBy(), pageable);
+        return new ResponseEntity<>(autoresPage, HttpStatus.OK);
     }
-
-    @GetMapping("/por-ano-publicacion")
-    public List<Libro> getLibrosPorAnoPublicacion(@RequestParam(name = "anoPublicacion") int anoPublicacion) {
-        return libroRepository.findAllByAnoPublicacion(anoPublicacion);
-    }
-
-    @GetMapping("/por-isbn")
-    public List<Libro> getLibrosPorISBN(@RequestParam(name = "isbn") String isbn) {
-        return libroRepository.findAllByIsbn(isbn);
-    }
-
-   /* @GetMapping("/por-autor")
-    public List<Libro> getLibrosPorAutor(@RequestParam(name = "autor") Autor autor) {
-        return libroRepository.findAllByAutor(autor);
-    }
-
-   /* @GetMapping("/Ordenar")
-    public ResponseEntity<List<Libro>> getOrderLibro(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "nombre") String orderBy, @RequestParam(defaultValue = "asc") String orderDirection) {
-
-        Sort.Direction direction = Sort.Direction.fromString(orderDirection.toLowerCase());
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Libro> libroPage = libroRepository.findAllLibroOrderedBy(orderBy, pageable);
-
-        List<Libro> libroList = libroPage.getContent();
-
-        return new ResponseEntity<>(libroList, HttpStatus.OK);
-    }
-
-    */
-   @PostMapping("/ordenar")
-   public ResponseEntity<Page<Libro>> getAllGeneros(@RequestBody AutorRestController.OrdenamientoRequest ordenamientoRequest) {
-       Sort.Direction direction = Sort.Direction.fromString(ordenamientoRequest.getOrderDirection().toUpperCase());
-       Pageable pageable = PageRequest.of(ordenamientoRequest.getPage(), ordenamientoRequest.getSize(), direction, ordenamientoRequest.getOrderBy());
-       Page<Libro> autoresPage = libroRepository.findAllOrderedBy(ordenamientoRequest.getOrderBy(), pageable);
-       return new ResponseEntity<>(autoresPage, HttpStatus.OK);
-   }
 
     @PostMapping
     public ResponseEntity<?> post(@RequestBody Libro input) {
@@ -225,6 +225,58 @@ class LibroRestController {
             throw new BibliotecaNotFoundException("Libro not found with id: " + id);
         }
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/libros")
+    public Page<Libro> getLibros(
+            @RequestParam(name = "titulo", required = false) String titulo,
+            @RequestParam(name = "anoPublicacion", required = false) Integer anoPublicacion,
+            @RequestParam(name = "isbn", required = false) String isbn,
+            @RequestParam(name = "autorId", required = false) Long autorId,
+            @RequestParam(name = "direccion", defaultValue = "asc") String direccion,
+            @RequestParam(name = "pagina", defaultValue = "0") int pagina,
+            @RequestParam(name = "tamanoPagina", defaultValue = "10") int tamanoPagina) {
+
+        Sort.Direction direction = Sort.Direction.ASC;
+        if (direccion.equalsIgnoreCase("desc")) {
+            direction = Sort.Direction.DESC;
+        }
+
+        PageRequest pageRequest = PageRequest.of(pagina, tamanoPagina, Sort.by(direction, "titulo"));
+
+        if (titulo != null && anoPublicacion != null && isbn != null && autorId != null) {
+            return libroRepository.findAllByTituloContainingAndAnoPublicacionAndIsbnContainingAndAutorId(titulo, anoPublicacion, isbn, autorId, pageRequest);
+        } else if (titulo != null && anoPublicacion != null && isbn != null) {
+            return libroRepository.findAllByTituloContainingAndAnoPublicacionAndIsbnContaining(titulo, anoPublicacion, isbn, pageRequest);
+        } else if (titulo != null && anoPublicacion != null && autorId != null) {
+            return libroRepository.findAllByTituloContainingAndAnoPublicacionAndAutorId(titulo, anoPublicacion, autorId, pageRequest);
+        } else if (titulo != null && isbn != null && autorId != null) {
+            return libroRepository.findAllByTituloContainingAndIsbnContainingAndAutorId(titulo, isbn, autorId, pageRequest);
+        } else if (anoPublicacion != null && isbn != null && autorId != null) {
+            return libroRepository.findAllByAnoPublicacionAndIsbnContainingAndAutorId(anoPublicacion, isbn, autorId, pageRequest);
+        } else if (titulo != null && anoPublicacion != null) {
+            return libroRepository.findAllByTituloContainingAndAnoPublicacion(titulo, anoPublicacion, pageRequest);
+        } else if (titulo != null && isbn != null) {
+            return libroRepository.findAllByTituloContainingAndIsbnContaining(titulo, isbn, pageRequest);
+        } else if (titulo != null && autorId != null) {
+            return libroRepository.findAllByTituloContainingAndAutorId(titulo, autorId, pageRequest);
+        } else if (anoPublicacion != null && isbn != null) {
+            return libroRepository.findAllByAnoPublicacionAndIsbnContaining(anoPublicacion, isbn, pageRequest);
+        } else if (anoPublicacion != null && autorId != null) {
+            return libroRepository.findAllByAnoPublicacionAndAutorId(anoPublicacion, autorId, pageRequest);
+        } else if (isbn != null && autorId != null) {
+            return libroRepository.findAllByIsbnContainingAndAutorId(isbn, autorId, pageRequest);
+        } else if (titulo != null) {
+            return libroRepository.findAllByTituloContaining(titulo, pageRequest);
+        } else if (anoPublicacion != null) {
+            return libroRepository.findAllByAnoPublicacion(anoPublicacion, pageRequest);
+        } else if (isbn != null) {
+            return libroRepository.findAllByIsbnContaining(isbn, pageRequest);
+        } else if (autorId != null) {
+            return libroRepository.findAllByAutorId(autorId, pageRequest);
+        } else {
+            return libroRepository.findAll(pageRequest);
+        }
     }
 
 
@@ -247,25 +299,6 @@ class GeneroRestController {
         return generoRepository.findById(id).orElse(null);
     }
 
-    @GetMapping("/por-nombre")
-    public List<Genero> getGenerosPorNombre(@RequestParam(name = "nombre") String nombre) {
-        return generoRepository.findAllByNombre(nombre);
-    }
-
-    @GetMapping("/por-descripcion")
-    public List<Genero> getGenerosPorDescripcion(@RequestParam(name = "descripcion") String descripcion) {
-        return generoRepository.findAllByDescripcion(descripcion);
-    }
-
-    @GetMapping("/por-edad-recomendada")
-    public List<Genero> getGenerosPorEdadRecomendada(@RequestParam(name = "edadRecomendada") String edadRecomendada) {
-        return generoRepository.findAllByEdadRecomendada(edadRecomendada);
-    }
-
-    @GetMapping("/por-url-wikipedia")
-    public List<Genero> getGenerosPorUrlWikipedia(@RequestParam(name = "urlWikipedia") String urlWikipedia) {
-        return generoRepository.findAllByUrlWikipedia(urlWikipedia);
-    }
 
     @PostMapping("/ordenar")
     public ResponseEntity<Page<Genero>> getAllGeneros(@RequestBody AutorRestController.OrdenamientoRequest ordenamientoRequest) {
@@ -285,9 +318,6 @@ class GeneroRestController {
     }
 
     */
-
-
-
 
     /*@GetMapping("/Ordenar")
     public ResponseEntity<Page<Autor>> getAllGenero(
@@ -341,8 +371,60 @@ class GeneroRestController {
         return ResponseEntity.ok().build();
     }
 
-}
+    @GetMapping("/generos")
+    public Page<Genero> getGeneros(
+            @RequestParam(name = "nombre", required = false) String nombre,
+            @RequestParam(name = "descripcion", required = false) String descripcion,
+            @RequestParam(name = "edadRecomendada", required = false) Integer edadRecomendada,
+            @RequestParam(name = "urlWikipedia", required = false) String urlWikipedia,
+            @RequestParam(name = "direccion", defaultValue = "asc") String direccion,
+            @RequestParam(name = "pagina", defaultValue = "0") int pagina,
+            @RequestParam(name = "tamanoPagina", defaultValue = "10") int tamanoPagina) {
 
+        Sort.Direction direction = Sort.Direction.ASC;
+        if (direccion.equalsIgnoreCase("desc")) {
+            direction = Sort.Direction.DESC;
+        }
+
+        PageRequest pageRequest = PageRequest.of(pagina, tamanoPagina, Sort.by(direction, "nombre"));
+
+        if (nombre != null && descripcion != null && edadRecomendada != null && urlWikipedia != null) {
+            return generoRepository.findAllByNombreContainingAndDescripcionContainingAndEdadRecomendadaAndUrlWikipediaContaining(nombre, descripcion, edadRecomendada, urlWikipedia, pageRequest);
+        } else if (nombre != null && descripcion != null && edadRecomendada != null) {
+            return generoRepository.findAllByNombreContainingAndDescripcionContainingAndEdadRecomendada(nombre, descripcion, edadRecomendada, pageRequest);
+        } else if (nombre != null && descripcion != null && urlWikipedia != null) {
+            return generoRepository.findAllByNombreContainingAndDescripcionContainingAndUrlWikipediaContaining(nombre, descripcion, urlWikipedia, pageRequest);
+        } else if (nombre != null && edadRecomendada != null && urlWikipedia != null) {
+            return generoRepository.findAllByNombreContainingAndEdadRecomendadaAndUrlWikipediaContaining(nombre, edadRecomendada, urlWikipedia, pageRequest);
+        } else if (descripcion != null && edadRecomendada != null && urlWikipedia != null) {
+            return generoRepository.findAllByDescripcionContainingAndEdadRecomendadaAndUrlWikipediaContaining(descripcion, edadRecomendada, urlWikipedia, pageRequest);
+        } else if (nombre != null && descripcion != null) {
+            return generoRepository.findAllByNombreContainingAndDescripcionContaining(nombre, descripcion, pageRequest);
+        } else if (nombre != null && edadRecomendada != null) {
+            return generoRepository.findAllByNombreContainingAndEdadRecomendada(nombre, edadRecomendada, pageRequest);
+        } else if (nombre != null && urlWikipedia != null) {
+            return generoRepository.findAllByNombreContainingAndUrlWikipediaContaining(nombre, urlWikipedia, pageRequest);
+        } else if (descripcion != null && edadRecomendada != null) {
+            return generoRepository.findAllByDescripcionContainingAndEdadRecomendada(descripcion, edadRecomendada, pageRequest);
+        } else if (descripcion != null && urlWikipedia != null) {
+            return generoRepository.findAllByDescripcionContainingAndUrlWikipediaContaining(descripcion, urlWikipedia, pageRequest);
+        } else if (edadRecomendada != null && urlWikipedia != null) {
+            return generoRepository.findAllByEdadRecomendadaAndUrlWikipediaContaining(edadRecomendada, urlWikipedia, pageRequest);
+        } else if (nombre != null) {
+            return generoRepository.findAllByNombreContaining(nombre, pageRequest);
+        } else if (descripcion != null) {
+            return generoRepository.findAllByDescripcionContaining(descripcion, pageRequest);
+        } else if (edadRecomendada != null) {
+            return generoRepository.findAllByEdadRecomendada(edadRecomendada, pageRequest);
+        } else if (urlWikipedia != null) {
+            return generoRepository.findAllByUrlWikipediaContaining(urlWikipedia, pageRequest);
+        } else {
+            return generoRepository.findAll(pageRequest);
+        }
+    }
+
+
+}
 
 @RestController
 @RequestMapping("/autor")
@@ -361,39 +443,6 @@ class AutorRestController {
         return autorRepository.findById(id).orElseThrow(() -> new BibliotecaNotFoundException("Autor not found with id: " + id));
     }
 
-    @GetMapping("/autores-por-nombre")
-    public List<Autor> getAutoresPorNombre(@RequestParam(name = "nombre") String nombre) {
-        return autorRepository.findAllByNombre(nombre);
-    }
-
-    @GetMapping("/autores-por-fecha-nacimiento")
-    public List<Autor> getAutoresPorFechaNacimiento(@RequestParam(name = "fechaNacimiento") Date fechaNacimiento) {
-        return autorRepository.findAllByFechaNacimiento(fechaNacimiento);
-    }
-
-    @GetMapping("/autores-por-nacionalidad")
-    public List<Autor> getAutoresPorNacionalidad(@RequestParam(name = "nacionalidad") String nacionalidad) {
-        return autorRepository.findAllByNacionalidad(nacionalidad);
-    }
-
-
-    /*@GetMapping("/Ordenar")
-    public ResponseEntity<Page<Autor>> getAllAutores(
-            @RequestParam("orderBy") String orderBy,
-            @RequestParam("orderDirection") String orderDirection,
-            @RequestParam("page") int page,
-            @RequestParam("size") int size) {
-
-        Sort.Direction direction = Sort.Direction.fromString(orderDirection.toUpperCase());
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, orderBy));
-        System.out.println("OrderDirection: " + orderDirection);
-
-        Page<Autor> autoresPage = autorRepository.findAllOrderedBy(orderBy, orderDirection, pageable);
-
-
-        return new ResponseEntity<>(autoresPage, HttpStatus.OK);
-    }
-     */
     @Data
     public static class OrdenamientoRequest {
         private String orderBy;
@@ -406,11 +455,12 @@ class AutorRestController {
         }
     }
 
+
     @PostMapping("/ordenar")
     public ResponseEntity<Page<Autor>> getAllAutores(@RequestBody OrdenamientoRequest ordenamientoRequest) {
         Sort.Direction direction = Sort.Direction.fromString(ordenamientoRequest.getOrderDirection().toUpperCase());
         Pageable pageable = PageRequest.of(ordenamientoRequest.getPage(), ordenamientoRequest.getSize(), direction, ordenamientoRequest.getOrderBy());
-        Page<Autor> autoresPage = autorRepository.findAllOrderedBy(ordenamientoRequest.getOrderBy(), pageable);
+        Page<Autor> autoresPage = autorRepository.findAllOrderedBy(ordenamientoRequest.getOrderBy(), direction.toString(), pageable);
         return new ResponseEntity<>(autoresPage, HttpStatus.OK);
     }
 
@@ -445,39 +495,85 @@ class AutorRestController {
         }
     }
 
-    /*@GetMapping("/Ordenar")
-    public ResponseEntity<List<Autor>> getAllAutores(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String orderBy) {
+    @GetMapping("/autores")
+    public Page<Autor> getAutores(
+            @RequestParam(name = "nombre", required = false) String nombre,
+            @RequestParam(name = "fechaNacimiento", required = false) Date fechaNacimiento,
+            @RequestParam(name = "nacionalidad", required = false) String nacionalidad,
+            @RequestParam(name = "direccion", defaultValue = "asc") String direccion,
+            @RequestParam(name = "pagina", defaultValue = "0") int pagina,
+            @RequestParam(name = "tamanoPagina", defaultValue = "10") int tamanoPagina) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Autor> autoresPage = autorRepository.findAllOrderedBy(orderBy, pageable);
+        Sort.Direction direction = Sort.Direction.ASC;
+        if (direccion.equalsIgnoreCase("desc")) {
+            direction = Sort.Direction.DESC;
+        }
 
-        List<Autor> autoresList = autoresPage.getContent();
+        PageRequest pageRequest = PageRequest.of(pagina, tamanoPagina, Sort.by(direction, "nombre"));
 
-        return new ResponseEntity<>(autoresList, HttpStatus.OK);
+
+        if (nombre != null && !nombre.isEmpty() && fechaNacimiento != null && nacionalidad != null && !nacionalidad.isEmpty()) {
+            return autorRepository.findAllByNombreAndFechaNacimientoAndNacionalidad(nombre, fechaNacimiento, nacionalidad, pageRequest);
+        } else if (nombre != null && !nombre.isEmpty() && fechaNacimiento != null) {
+            return autorRepository.findAllByNombreAndFechaNacimiento(nombre, fechaNacimiento, pageRequest);
+        } else if (nombre != null && !nombre.isEmpty() && nacionalidad != null && !nacionalidad.isEmpty()) {
+            return autorRepository.findAllByNombreAndNacionalidad(nombre, nacionalidad, pageRequest);
+        } else if (fechaNacimiento != null && nacionalidad != null && !nacionalidad.isEmpty()) {
+            return autorRepository.findAllByFechaNacimientoAndNacionalidad(fechaNacimiento, nacionalidad, pageRequest);
+        } else if (nombre != null && !nombre.isEmpty()) {
+            return autorRepository.findAllByNombre(nombre, pageRequest);
+        } else if (fechaNacimiento != null) {
+            return autorRepository.findAllByFechaNacimiento(fechaNacimiento, pageRequest);
+        } else if (nacionalidad != null && !nacionalidad.isEmpty()) {
+            return autorRepository.findAllByNacionalidad(nacionalidad, pageRequest);
+        } else {
+            return autorRepository.findAll(pageRequest);
+        }
     }
-     */
-    /*@GetMapping("/Ordenar")
-    public ResponseEntity<List<Autor>> getAllAutores(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String orderBy,
-            @RequestParam(defaultValue = "asc") String orderDirection) {
 
-        Sort.Direction direction = Sort.Direction.fromString(orderDirection.toLowerCase());
-        Pageable pageable = PageRequest.of(page, size, direction, orderBy);
+    @Data
+    public class AutorSearchRequest {
+        private List<BibliotecaRestController.OrderCriteria> listOrderCriteria;
+        private List<BibliotecaRestController.SearchCriteria> listSearchCriteria;
+        private BibliotecaRestController.PageCriteria page;
+    }
 
-        Page<Autor> autoresPage = autorRepository.findAllOrderedBy(orderBy, pageable);
+    /*@PostMapping("/autores")
+    public Page<Autor> getAutores(@RequestBody AutorSearchRequest searchRequest) {
+        Sort.Direction direction = Sort.Direction.ASC;
+        if (searchRequest.getListOrderCriteria() != null && !searchRequest.getListOrderCriteria().isEmpty()) {
+            BibliotecaRestController.OrderCriteria orderCriteria = searchRequest.getListOrderCriteria().get(0);
+            if (orderCriteria.getValueSortOrder().equalsIgnoreCase("desc")) {
+                direction = Sort.Direction.DESC;
+            }
+        }
 
-        List<Autor> autoresList = autoresPage.getContent();
+        PageRequest pageRequest = PageRequest.of(searchRequest.getPage().getPageIndex(), searchRequest.getPage().getPageSize(), Sort.by(direction, "nombre"));
 
-        return new ResponseEntity<>(autoresList, HttpStatus.OK);
+        List<BibliotecaRestController.SearchCriteria> listSearchCriteria = searchRequest.getListSearchCriteria();
+        if (listSearchCriteria != null && !listSearchCriteria.isEmpty()) {
+            // Construir la especificación de búsqueda dinámicamente
+            Specification<Autor> spec = Specification.where(null);
+            for (BibliotecaRestController.SearchCriteria criteria : listSearchCriteria) {
+                if (criteria.getKey().equals("nombre")) {
+                    spec = spec.and((root, query, cb) -> cb.equal(root.get("nombre"), criteria.getValue()));
+                } else if (criteria.getKey().equals("fechaNacimiento")) {
+                    spec = spec.and((root, query, cb) -> cb.equal(root.get("fechaNacimiento"), criteria.getValue()));
+                } else if (criteria.getKey().equals("nacionalidad")) {
+                    spec = spec.and((root, query, cb) -> cb.equal(root.get("nacionalidad"), criteria.getValue()));
+                }
+            }
+
+            return autorRepository.findAll(spec, pageRequest);
+        } else {
+            return autorRepository.findAll(pageRequest);
+        }
     }
 
      */
-
 }
+
+
+
 
 

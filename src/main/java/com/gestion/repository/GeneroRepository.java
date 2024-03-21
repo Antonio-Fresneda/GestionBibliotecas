@@ -57,4 +57,34 @@ public interface GeneroRepository extends JpaRepository<Genero, Long> {
 
 
      */
+    Page<Genero> findAllByNombreContainingAndDescripcionContainingAndEdadRecomendadaAndUrlWikipediaContaining(String nombre, String descripcion, Integer edadRecomendada, String urlWikipedia, Pageable pageable);
+
+    Page<Genero> findAllByNombreContainingAndDescripcionContainingAndEdadRecomendada(String nombre, String descripcion, Integer edadRecomendada, Pageable pageable);
+
+    Page<Genero> findAllByNombreContainingAndDescripcionContainingAndUrlWikipediaContaining(String nombre, String descripcion, String urlWikipedia, Pageable pageable);
+
+    Page<Genero> findAllByNombreContainingAndEdadRecomendadaAndUrlWikipediaContaining(String nombre, Integer edadRecomendada, String urlWikipedia, Pageable pageable);
+
+    Page<Genero> findAllByDescripcionContainingAndEdadRecomendadaAndUrlWikipediaContaining(String descripcion, Integer edadRecomendada, String urlWikipedia, Pageable pageable);
+
+    Page<Genero> findAllByNombreContainingAndDescripcionContaining(String nombre, String descripcion, Pageable pageable);
+
+    Page<Genero> findAllByNombreContainingAndEdadRecomendada(String nombre, Integer edadRecomendada, Pageable pageable);
+
+    Page<Genero> findAllByNombreContainingAndUrlWikipediaContaining(String nombre, String urlWikipedia, Pageable pageable);
+
+    Page<Genero> findAllByDescripcionContainingAndEdadRecomendada(String descripcion, Integer edadRecomendada, Pageable pageable);
+
+    Page<Genero> findAllByDescripcionContainingAndUrlWikipediaContaining(String descripcion, String urlWikipedia, Pageable pageable);
+
+    Page<Genero> findAllByEdadRecomendadaAndUrlWikipediaContaining(Integer edadRecomendada, String urlWikipedia, Pageable pageable);
+
+    Page<Genero> findAllByNombreContaining(String nombre, Pageable pageable);
+
+    Page<Genero> findAllByDescripcionContaining(String descripcion, Pageable pageable);
+
+    Page<Genero> findAllByEdadRecomendada(Integer edadRecomendada, Pageable pageable);
+
+    Page<Genero> findAllByUrlWikipediaContaining(String urlWikipedia, Pageable pageable);
+
 }

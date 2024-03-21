@@ -20,7 +20,7 @@ public class Genero {
     @Column(nullable = false)
     private String descripcion;
 
-    private String edadRecomendada;
+    private Integer edadRecomendada;
     private String urlWikipedia;
 
 }
