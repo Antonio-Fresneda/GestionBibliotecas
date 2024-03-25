@@ -10,12 +10,13 @@ import lombok.Data;
 public class BibliotecaLibro {
 
    @Id
-   @GeneratedValue(strategy = GenerationType.IDENTITY)
+   @GeneratedValue(strategy = GenerationType.AUTO)
    private Long id;
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "libro_id")
     private Libro libro;
+
 
     @ManyToOne(optional = true)
     @JoinColumn(name = "biblioteca_id")

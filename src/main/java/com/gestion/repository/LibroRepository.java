@@ -13,7 +13,7 @@ import java.util.List;
 
 public interface LibroRepository extends JpaRepository<Libro, Long> {
     @Query("SELECT a FROM Libro a WHERE a.titulo = ?1")
-    List<Libro> findAllByTitulo(String titulo);
+    Libro findByTitulo(String titulo);
 
     @Query("SELECT a FROM Libro a WHERE a.anoPublicacion = ?1")
     List<Libro> findAllByAnoPublicacion(int anoPublicacion);

@@ -6,14 +6,18 @@ import com.gestion.entities.Genero;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-public interface GeneroRepository extends JpaRepository<Genero, Long> {
+@Repository
+public interface GeneroRepository extends JpaRepository<Genero, Long>, JpaSpecificationExecutor<Genero> {
+
     @Query("SELECT g FROM Genero g WHERE g.nombre = ?1")
-    List<Genero> findAllByNombre(String nombre);
+    List<Genero> findByNombre(String nombre);
 
     @Query("SELECT g FROM Genero g WHERE g.descripcion =?1")
     List<Genero> findAllByDescripcion(String descripcion);
@@ -87,4 +91,18 @@ public interface GeneroRepository extends JpaRepository<Genero, Long> {
 
     Page<Genero> findAllByUrlWikipediaContaining(String urlWikipedia, Pageable pageable);
 
+    @Query(value = "SELECT * FROM Genero WHERE (:searchCriteria is null OR nombre LIKE %:searchCriteria%) " +
+            "AND (:orderBy is null OR " +
+            "CASE " +
+            "WHEN :orderBy = 'nombre' THEN nombre " +
+            "WHEN :orderBy = 'descripcion' THEN descripcion " +
+            "WHEN :orderBy = 'edadRecomendada' THEN edad_recomendada " +
+            "WHEN :orderBy = 'urlWikipedia' THEN url_wikipedia " +
+            "ELSE id END ASC)",
+            countQuery = "SELECT COUNT(*) FROM Genero WHERE (:searchCriteria is null OR nombre LIKE %:searchCriteria%)",
+            nativeQuery = true)
+    Page<Genero> findAllOrderedAndFiltered(
+            @Param("orderBy") String orderBy,
+            @Param("searchCriteria") String searchCriteria,
+            Pageable pageable);
 }

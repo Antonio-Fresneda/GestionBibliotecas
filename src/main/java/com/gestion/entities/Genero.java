@@ -1,8 +1,10 @@
 package com.gestion.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -23,4 +25,7 @@ public class Genero {
     private Integer edadRecomendada;
     private String urlWikipedia;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "genero", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<LibroGenero> libros = new ArrayList<>();
 }

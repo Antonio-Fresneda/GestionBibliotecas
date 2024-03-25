@@ -27,4 +27,7 @@ public class Biblioteca {
 
 	@OneToMany(mappedBy = "biblioteca")
 	private List<BibliotecaLibro> libroBibliotecas = new ArrayList<>();
+
+	public Biblioteca(long l, String bibliotecaMunicipal, String s, String s1, String mail, String s2) {
+	}
 }
