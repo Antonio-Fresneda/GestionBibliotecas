@@ -203,10 +203,17 @@ public class AutorRestController {
                     // Manejar el error según sea necesario
                     return null;
                 }
-                // Otros casos según tus necesidades
+            case "CONTAINS":
+                if (criteria.getValue() instanceof String) {
+                    String value = (String) criteria.getValue();
+                    return builder.like(root.get(criteria.getKey()), "%" + value + "%");
+                }
+                break;
             default:
                 return null;
         }
+        return null;
+
     }
 
     private AutorDto convertirAAutorDto(Autor autor) {

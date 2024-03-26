@@ -240,9 +240,16 @@ public class BibliotecaRestController {
                 return builder.greaterThan(root.get(criteria.getKey()), criteria.getValue());
             case "LESS_THAN":
                 return builder.lessThan(root.get(criteria.getKey()), criteria.getValue());
+            case "CONTAINS":
+                if (criteria.getValue() instanceof String) {
+                    String value = (String) criteria.getValue();
+                    return builder.like(root.get(criteria.getKey()), "%" + value + "%");
+                }
+                break;
             default:
                 return null;
         }
+        return null;
     }
 
     private BibliotecaDto convertirABibliotecaDto(Biblioteca biblioteca) {
