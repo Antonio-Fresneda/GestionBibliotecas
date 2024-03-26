@@ -24,7 +24,7 @@ public class Libro {
 
     private String isbn;
 
-    @ManyToOne(cascade = CascadeType.ALL,optional = true)
+    @ManyToOne(cascade = CascadeType.ALL, optional = true)
     @JoinColumn(name = "autor_id")
     private Autor autor;
 

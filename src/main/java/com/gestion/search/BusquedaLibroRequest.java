@@ -1,22 +1,18 @@
 package com.gestion.search;
 
-
 import lombok.Data;
-import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
 @Data
-public class SearchRequest {
-
+public class BusquedaLibroRequest {
 
     private List<OrderCriteria> listOrderCriteria;
     private List<SearchCriteria> listSearchCriteria;
-    private PageRequest page;
+    private PageCriteria page;
 
 
 }
-
 
 
 

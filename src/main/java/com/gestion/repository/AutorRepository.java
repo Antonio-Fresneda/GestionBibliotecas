@@ -83,9 +83,9 @@ public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecific
 
     @Query("SELECT a FROM Autor a WHERE (:key IS NULL OR "
             + "(:key = 'nombre' AND a.nombre = :value) OR "
-            + "(:key = 'fechaNacimiento' AND a.fechaNacimiento = :fecha) OR "  // Cambiado :value a :fecha
+            + "(:key = 'fechaNacimiento' AND a.fechaNacimiento = :fecha) OR "
             + "(:key = 'nacionalidad' AND a.nacionalidad = :value))")
-    Page<Autor> searchAutores(String key, Object value, Pageable pageable);  // Agregado parámetro @Param para :fecha
+    Page<Autor> searchAutores(String key, Object value, Pageable pageable);
 
 }
 

@@ -4,8 +4,14 @@ import com.gestion.dto.AutorDto;
 import com.gestion.entities.Autor;
 import com.gestion.exception.BibliotecaNotFoundException;
 import com.gestion.repository.AutorRepository;
+import com.gestion.search.BusquedaLibroRequest;
+import com.gestion.search.OrderCriteria;
 import com.gestion.search.SearchCriteria;
-import com.gestion.search.SearchRequest;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,8 +22,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -121,95 +129,93 @@ public class AutorRestController {
         return autorDto;
     }
 
-    @Data
-    public class PageRequestDto {
+    @Autowired
+    private EntityManager entityManager;
 
-        private int pageIndex;
-        private int pageSize;
+    @PostMapping("/buscar-autores")
+    public List<AutorDto> buscarAutores(@RequestBody BusquedaLibroRequest request) {
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Autor> criteriaQuery = criteriaBuilder.createQuery(Autor.class);
+        Root<Autor> root = criteriaQuery.from(Autor.class);
 
-        public int getPageIndex() {
-            return pageIndex;
+        Predicate predicate = criteriaBuilder.conjunction();
+        for (SearchCriteria criteria : request.getListSearchCriteria()) {
+            predicate = criteriaBuilder.and(predicate, getPredicate(criteria, criteriaBuilder, root));
         }
+        criteriaQuery.where(predicate);
 
-        public int getPageSize() {
-            return pageSize;
-        }
-
-
-    }
-   /* @PostMapping("/autores/search")
-    public ResponseEntity<Page<AutorDto>> searchAutores(@RequestBody SearchRequest request) {
-        List<SearchCriteria> searchCriteria = request.getListSearchCriteria();
-        Pageable pageable = PageRequest.of(
-                request.getPage().getPageIndex(),
-                request.getPage().getPageSize()
-        );
-
-        // Realizar la búsqueda con los criterios proporcionados
-        Page<Autor> autoresPage = autorRepository.searchAutores(
-                searchCriteria.get(0).getKey(),
-                searchCriteria.get(0).getValue(),
-                pageable
-        );
-
-
-        Page<AutorDto> autoresDtoPage = autoresPage.map(this::convertToDto);
-
-        return new ResponseEntity<>(autoresDtoPage, HttpStatus.OK);
-    }
-
-    */
-
-
-    @PostMapping("/autores/search")
-    public Page<Autor> searchAutores(@RequestBody SearchRequest searchRequest) throws ParseException {
-
-        Pageable pageable = PageRequest.of(
-                searchRequest.getPage().getPageNumber(),
-                searchRequest.getPage().getPageSize(),
-                Sort.by(searchRequest.getListOrderCriteria().stream()
-                        .map(criteria -> Sort.Order.by(criteria.getSortBy())
-                                .with(criteria.getValueSortOrder().equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC))
-                        .collect(Collectors.toList())
-                )
-        );
-
-        String nombre = null, nacionalidad = null;
-        Date fechaNacimiento = null;
-
-        for (SearchCriteria criteria : searchRequest.getListSearchCriteria()) {
-            if (criteria.getKey().equals("nombre")) {
-                nombre = criteria.getValue();
-            } else if (criteria.getKey().equals("fechaNacimiento")) {
-                String fechaNacimientoString = criteria.getValue();
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                fechaNacimiento = dateFormat.parse(fechaNacimientoString);
-            } else if (criteria.getKey().equals("nacionalidad")) {
-                nacionalidad = criteria.getValue();
+        for (OrderCriteria orderCriteria : request.getListOrderCriteria()) {
+            if (orderCriteria.getSortBy() != null && !orderCriteria.getSortBy().isEmpty()) {
+                if (orderCriteria.getValueSortOrder() != null && !orderCriteria.getValueSortOrder().isEmpty()) {
+                    if (orderCriteria.getValueSortOrder().equalsIgnoreCase("ASC")) {
+                        criteriaQuery.orderBy(criteriaBuilder.asc(root.get(orderCriteria.getSortBy())));
+                    } else if (orderCriteria.getValueSortOrder().equalsIgnoreCase("DESC")) {
+                        criteriaQuery.orderBy(criteriaBuilder.desc(root.get(orderCriteria.getSortBy())));
+                    }
+                }
             }
         }
 
-        Page<Autor> autores = null;
 
-        if (nombre != null && fechaNacimiento != null && nacionalidad != null) {
-            autores = autorRepository.findAllByNombreAndFechaNacimientoAndNacionalidad(nombre, fechaNacimiento, nacionalidad, pageable);
-        } else if (nombre != null && fechaNacimiento != null) {
-            autores = autorRepository.findAllByNombreAndFechaNacimiento(nombre, fechaNacimiento, pageable);
-        } else if (nombre != null && nacionalidad != null) {
-            autores = autorRepository.findAllByNombreAndNacionalidad(nombre, nacionalidad, pageable);
-        } else if (fechaNacimiento != null && nacionalidad != null) {
-            autores = autorRepository.findAllByFechaNacimientoAndNacionalidad(fechaNacimiento, nacionalidad, pageable);
-        } else if (nombre != null) {
-            autores = autorRepository.findAllByNombre(nombre, pageable);
-        } else if (fechaNacimiento != null) {
-            autores = autorRepository.findAllByFechaNacimiento(fechaNacimiento, pageable);
-        } else if (nacionalidad != null) {
-            autores = autorRepository.findAllByNacionalidad(nacionalidad, pageable);
-        } else {
-            autores = autorRepository.findAll(pageable);
+        List<Autor> autores = entityManager.createQuery(criteriaQuery)
+                .setFirstResult(request.getPage().getPageIndex() * request.getPage().getPageSize())
+                .setMaxResults(request.getPage().getPageSize())
+                .getResultList();
+
+        // Convertir los autores a AutorDto
+        List<AutorDto> autoresDto = new ArrayList<>();
+        for (Autor autor : autores) {
+            autoresDto.add(convertirAAutorDto(autor));
         }
 
-        return autores;
+        return autoresDto;
+    }
+
+    private Predicate getPredicate(SearchCriteria criteria, CriteriaBuilder builder, Root<Autor> root) {
+        switch (criteria.getOperation()) {
+            case "EQUALS":
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+                    Date fecha = sdf.parse(criteria.getValue());
+                    return builder.equal(root.get(criteria.getKey()), fecha);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    // Manejar el error según sea necesario
+                    return null;
+                }
+            case "LESS_THAN":
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+                    Date fecha = sdf.parse(criteria.getValue());
+                    return builder.lessThan(root.get(criteria.getKey()), fecha);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    // Manejar el error según sea necesario
+                    return null;
+                }
+            case "GREATER_THAN":
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+                    Date fecha = sdf.parse(criteria.getValue());
+                    return builder.greaterThan(root.get(criteria.getKey()), fecha);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    // Manejar el error según sea necesario
+                    return null;
+                }
+                // Otros casos según tus necesidades
+            default:
+                return null;
+        }
+    }
+
+    private AutorDto convertirAAutorDto(Autor autor) {
+        AutorDto autorDto = new AutorDto();
+        autorDto.setId(autor.getId());
+        autorDto.setNombre(autor.getNombre());
+        autorDto.setFechaNacimiento(autor.getFechaNacimiento());
+        autorDto.setNacionalidad(autor.getNacionalidad());
+        return autorDto;
     }
 
 

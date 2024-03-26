@@ -5,6 +5,14 @@ import com.gestion.dto.BibliotecaDto;
 import com.gestion.entities.*;
 import com.gestion.exception.BibliotecaNotFoundException;
 import com.gestion.repository.*;
+import com.gestion.search.BusquedaLibroRequest;
+import com.gestion.search.OrderCriteria;
+import com.gestion.search.SearchCriteria;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
@@ -114,6 +122,8 @@ public class BibliotecaRestController {
 
 
 
+
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable(name = "id") long id) {
         bibliotecaRepository.deleteById(id);
@@ -168,6 +178,74 @@ public class BibliotecaRestController {
     }
 
     private BibliotecaDto convertToDto(Biblioteca biblioteca) {
+        BibliotecaDto bibliotecaDto = new BibliotecaDto();
+        bibliotecaDto.setId(biblioteca.getId());
+        bibliotecaDto.setNombre(biblioteca.getNombre());
+        bibliotecaDto.setDireccion(biblioteca.getDireccion());
+        bibliotecaDto.setTelefono(biblioteca.getTelefono());
+        bibliotecaDto.setEmail(biblioteca.getEmail());
+        bibliotecaDto.setSitioWeb(biblioteca.getSitioWeb());
+        return bibliotecaDto;
+    }
+
+    @Autowired
+    private EntityManager entityManager;
+
+    @PostMapping("/buscar-bibliotecas")
+    public List<BibliotecaDto> buscarBibliotecas(@RequestBody BusquedaLibroRequest request) {
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Biblioteca> criteriaQuery = criteriaBuilder.createQuery(Biblioteca.class);
+        Root<Biblioteca> root = criteriaQuery.from(Biblioteca.class);
+
+
+        Predicate predicate = criteriaBuilder.conjunction();
+        for (SearchCriteria criteria : request.getListSearchCriteria()) {
+            predicate = criteriaBuilder.and(predicate, getPredicate(criteria, criteriaBuilder, root));
+        }
+        criteriaQuery.where(predicate);
+
+        // Ordenar según criterios de orden
+        for (OrderCriteria orderCriteria : request.getListOrderCriteria()) {
+            if (orderCriteria.getSortBy() != null && !orderCriteria.getSortBy().isEmpty()) {
+                if (orderCriteria.getValueSortOrder() != null && !orderCriteria.getValueSortOrder().isEmpty()) {
+                    if (orderCriteria.getValueSortOrder().equalsIgnoreCase("ASC")) {
+                        criteriaQuery.orderBy(criteriaBuilder.asc(root.get(orderCriteria.getSortBy())));
+                    } else if (orderCriteria.getValueSortOrder().equalsIgnoreCase("DESC")) {
+                        criteriaQuery.orderBy(criteriaBuilder.desc(root.get(orderCriteria.getSortBy())));
+                    }
+                }
+            }
+        }
+
+        // Aplicar paginación
+        List<Biblioteca> bibliotecas = entityManager.createQuery(criteriaQuery)
+                .setFirstResult(request.getPage().getPageIndex() * request.getPage().getPageSize())
+                .setMaxResults(request.getPage().getPageSize())
+                .getResultList();
+
+        // Convertir las bibliotecas a BibliotecaDto
+        List<BibliotecaDto> bibliotecasDto = new ArrayList<>();
+        for (Biblioteca biblioteca : bibliotecas) {
+            bibliotecasDto.add(convertirABibliotecaDto(biblioteca));
+        }
+
+        return bibliotecasDto;
+    }
+
+    private Predicate getPredicate(SearchCriteria criteria, CriteriaBuilder builder, Root<Biblioteca> root) {
+        switch (criteria.getOperation()) {
+            case "EQUALS":
+                return builder.equal(root.get(criteria.getKey()), criteria.getValue());
+            case "GREATER_THAN":
+                return builder.greaterThan(root.get(criteria.getKey()), criteria.getValue());
+            case "LESS_THAN":
+                return builder.lessThan(root.get(criteria.getKey()), criteria.getValue());
+            default:
+                return null;
+        }
+    }
+
+    private BibliotecaDto convertirABibliotecaDto(Biblioteca biblioteca) {
         BibliotecaDto bibliotecaDto = new BibliotecaDto();
         bibliotecaDto.setId(biblioteca.getId());
         bibliotecaDto.setNombre(biblioteca.getNombre());
