@@ -1,5 +1,6 @@
 package com.gestion.controller;
 
+import com.gestion.dto.AutorDto;
 import com.gestion.dto.LibroDto;
 import com.gestion.entities.Autor;
 import com.gestion.entities.Genero;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/libro")
@@ -120,11 +122,10 @@ public class LibroRestController {
     }
 
     @GetMapping("/libros")
-    public Page<LibroDto> getLibros(
+    public List<LibroDto> getLibros(
             @RequestParam(name = "titulo", required = false) String titulo,
             @RequestParam(name = "anoPublicacion", required = false) Integer anoPublicacion,
             @RequestParam(name = "isbn", required = false) String isbn,
-            @RequestParam(name = "autorId", required = false) Long autorId,
             @RequestParam(name = "direccion", defaultValue = "asc") String direccion,
             @RequestParam(name = "pagina", defaultValue = "0") int pagina,
             @RequestParam(name = "tamanoPagina", defaultValue = "10") int tamanoPagina) {
@@ -138,46 +139,31 @@ public class LibroRestController {
 
         Page<Libro> librosPage;
 
-        if (titulo != null && anoPublicacion != null && isbn != null && autorId != null) {
-            librosPage = libroRepository.findAllByTituloContainingAndAnoPublicacionAndIsbnContainingAndAutorId(titulo, anoPublicacion, isbn, autorId, pageRequest);
-        } else if (titulo != null && anoPublicacion != null && isbn != null) {
+        if (titulo != null && anoPublicacion != null && isbn != null) {
             librosPage = libroRepository.findAllByTituloContainingAndAnoPublicacionAndIsbnContaining(titulo, anoPublicacion, isbn, pageRequest);
-        } else if (titulo != null && anoPublicacion != null && autorId != null) {
-            librosPage = libroRepository.findAllByTituloContainingAndAnoPublicacionAndAutorId(titulo, anoPublicacion, autorId, pageRequest);
-        } else if (titulo != null && isbn != null && autorId != null) {
-            librosPage = libroRepository.findAllByTituloContainingAndIsbnContainingAndAutorId(titulo, isbn, autorId, pageRequest);
-        } else if (anoPublicacion != null && isbn != null && autorId != null) {
-            librosPage = libroRepository.findAllByAnoPublicacionAndIsbnContainingAndAutorId(anoPublicacion, isbn, autorId, pageRequest);
         } else if (titulo != null && anoPublicacion != null) {
             librosPage = libroRepository.findAllByTituloContainingAndAnoPublicacion(titulo, anoPublicacion, pageRequest);
         } else if (titulo != null && isbn != null) {
             librosPage = libroRepository.findAllByTituloContainingAndIsbnContaining(titulo, isbn, pageRequest);
-        } else if (titulo != null && autorId != null) {
-            librosPage = libroRepository.findAllByTituloContainingAndAutorId(titulo, autorId, pageRequest);
         } else if (anoPublicacion != null && isbn != null) {
             librosPage = libroRepository.findAllByAnoPublicacionAndIsbnContaining(anoPublicacion, isbn, pageRequest);
-        } else if (anoPublicacion != null && autorId != null) {
-            librosPage = libroRepository.findAllByAnoPublicacionAndAutorId(anoPublicacion, autorId, pageRequest);
-        } else if (isbn != null && autorId != null) {
-            librosPage = libroRepository.findAllByIsbnContainingAndAutorId(isbn, autorId, pageRequest);
         } else if (titulo != null) {
             librosPage = libroRepository.findAllByTituloContaining(titulo, pageRequest);
         } else if (anoPublicacion != null) {
             librosPage = libroRepository.findAllByAnoPublicacion(anoPublicacion, pageRequest);
         } else if (isbn != null) {
             librosPage = libroRepository.findAllByIsbnContaining(isbn, pageRequest);
-        } else if (autorId != null) {
-            librosPage = libroRepository.findAllByAutorId(autorId, pageRequest);
         } else {
             librosPage = libroRepository.findAll(pageRequest);
         }
 
-        List<LibroDto> libroDto = new ArrayList<>();
-        for (Libro libro : librosPage.getContent()) {
-            libroDto.add(convertToDto(libro));
-        }
-        return new PageImpl<>(libroDto, pageRequest, librosPage.getTotalElements());
+        List<LibroDto> libroDtoList = librosPage.getContent().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+
+        return libroDtoList;
     }
+
 
 
     private LibroDto convertToDto(Libro libro) {
@@ -187,9 +173,7 @@ public class LibroRestController {
         libroDTO.setAnoPublicacion(libro.getAnoPublicacion());
         libroDTO.setIsbn(libro.getIsbn());
 
-        if (libro.getAutor() != null) {
-            libroDTO.setAutorId(libro.getAutor().getId());
-        }
+
         return libroDTO;
     }
 

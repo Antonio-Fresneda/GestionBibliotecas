@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Date;
 import java.util.List;
 
 public interface LibroRepository extends JpaRepository<Libro, Long> {
@@ -38,27 +37,20 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
 
     Page<Libro> findAllByIsbnContaining(String isbn, Pageable pageable);
 
-    Page<Libro> findAllByAutorId(Long autorId, Pageable pageable);
 
     Page<Libro> findAllByTituloContainingAndAnoPublicacion(String titulo, Integer anoPublicacion, Pageable pageable);
 
     Page<Libro> findAllByTituloContainingAndIsbnContaining(String titulo, String isbn, Pageable pageable);
 
-    Page<Libro> findAllByTituloContainingAndAutorId(String titulo, Long autorId, Pageable pageable);
 
     Page<Libro> findAllByAnoPublicacionAndIsbnContaining(Integer anoPublicacion, String isbn, Pageable pageable);
 
-    Page<Libro> findAllByAnoPublicacionAndAutorId(Integer anoPublicacion, Long autorId, Pageable pageable);
-
-    Page<Libro> findAllByIsbnContainingAndAutorId(String isbn, Long autorId, Pageable pageable);
-
     Page<Libro> findAllByTituloContainingAndAnoPublicacionAndIsbnContaining(String titulo, Integer anoPublicacion, String isbn, Pageable pageable);
 
-    Page<Libro> findAllByTituloContainingAndAnoPublicacionAndAutorId(String titulo, Integer anoPublicacion, Long autorId, Pageable pageable);
 
-    Page<Libro> findAllByTituloContainingAndIsbnContainingAndAutorId(String titulo, String isbn, Long autorId, Pageable pageable);
 
-    Page<Libro> findAllByAnoPublicacionAndIsbnContainingAndAutorId(Integer anoPublicacion, String isbn, Long autorId, Pageable pageable);
 
-    Page<Libro> findAllByTituloContainingAndAnoPublicacionAndIsbnContainingAndAutorId(String titulo, Integer anoPublicacion, String isbn, Long autorId, Pageable pageable);
 }
+
+
+

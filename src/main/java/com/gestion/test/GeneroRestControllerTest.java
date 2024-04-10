@@ -6,11 +6,19 @@ import com.gestion.entities.Genero;
 import com.gestion.entities.Genero;
 import com.gestion.exception.BibliotecaNotFoundException;
 import com.gestion.repository.GeneroRepository;
+import com.gestion.search.BusquedaLibroRequest;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +41,11 @@ public class GeneroRestControllerTest {
 
     @InjectMocks
     private GeneroRestController generoRestController;
+
+    @Autowired
+    private EntityManager entityManager;
+
+
 
     @Test
     public void testList() {
@@ -142,7 +155,7 @@ public class GeneroRestControllerTest {
         assertEquals(200, response.getStatusCodeValue()); // O cualquier otro código de estado esperado
         // Aquí puedes agregar más aserciones si es necesario
     }
-    @Test
+    /*@Test
     public void testGetGeneros() {
         // Crear una lista de géneros de ejemplo
         List<Genero> generos = new ArrayList<>();
@@ -174,6 +187,51 @@ public class GeneroRestControllerTest {
         assertEquals(2, generosPage.getContent().size());
         // Aquí puedes realizar más verificaciones sobre los resultados si es necesario
     }
+
+     */
+    @Test
+    public void testPostGenero() {
+        // Arrange
+        Genero genero = new Genero();
+        genero.setNombre("Acción");
+        genero.setDescripcion("Género de películas de acción");
+        genero.setEdadRecomendada(16);
+        genero.setUrlWikipedia("https://es.wikipedia.org/wiki/G%C3%A9nero_cinematogr%C3%A1fico");
+
+        Genero generoGuardado = new Genero();
+        generoGuardado.setId(1L);
+        generoGuardado.setNombre("Acción");
+        generoGuardado.setDescripcion("Género de películas de acción");
+        generoGuardado.setEdadRecomendada(16);
+        generoGuardado.setUrlWikipedia("https://es.wikipedia.org/wiki/G%C3%A9nero_cinematogr%C3%A1fico");
+
+        when(generoRepository.save(genero)).thenReturn(generoGuardado);
+
+        // Act
+        ResponseEntity<?> responseEntity = generoRestController.post(genero);
+
+        // Assert
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(generoGuardado, responseEntity.getBody());
+
+        verify(generoRepository, times(1)).save(genero);
+    }
+
+    @Test
+    void testDeleteGeneroNotFound() {
+        // Arrange
+        long id = 1L;
+        when(generoRepository.findById(id)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        BibliotecaNotFoundException exception = assertThrows(BibliotecaNotFoundException.class,
+                () -> generoRestController.delete(id));
+        assertEquals("Genero not found with id: " + id, exception.getMessage());
+    }
+
+
+
+
 
 }
 

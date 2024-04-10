@@ -126,6 +126,10 @@ public class BibliotecaRestController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable(name = "id") long id) {
+        Optional<Biblioteca> bibliotecaOptional = bibliotecaRepository.findById(id);
+        if (bibliotecaOptional.isEmpty()) {
+            throw new BibliotecaNotFoundException("Biblioteca with id " + id + " not found");
+        }
         bibliotecaRepository.deleteById(id);
         return ResponseEntity.ok().build();
     }

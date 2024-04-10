@@ -2,6 +2,7 @@ package com.gestion.controller;
 
 import com.gestion.dto.AutorDto;
 import com.gestion.entities.Autor;
+import com.gestion.entities.Genero;
 import com.gestion.exception.BibliotecaNotFoundException;
 import com.gestion.repository.AutorRepository;
 import com.gestion.search.BusquedaLibroRequest;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -59,6 +61,7 @@ public class AutorRestController {
         return ResponseEntity.ok(save);
     }
 
+
     @PostMapping
     public ResponseEntity<?> post(@RequestBody Autor input) {
         Autor save = autorRepository.save(input);
@@ -81,7 +84,7 @@ public class AutorRestController {
     }
 
     @GetMapping("/autores")
-    public Page<AutorDto> getAutores(
+    public List<AutorDto> getAutores(
             @RequestParam(name = "nombre", required = false) String nombre,
             @RequestParam(name = "fechaNacimiento", required = false) Date fechaNacimiento,
             @RequestParam(name = "nacionalidad", required = false) String nacionalidad,
@@ -116,7 +119,11 @@ public class AutorRestController {
             autoresPage = autorRepository.findAll(pageRequest);
         }
 
-        return autoresPage.map(this::convertToDto);
+        List<AutorDto> autoresDtoList = autoresPage.getContent().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+
+        return autoresDtoList;
     }
 
     private AutorDto convertToDto(Autor autor) {
@@ -125,9 +132,9 @@ public class AutorRestController {
         autorDto.setNombre(autor.getNombre());
         autorDto.setFechaNacimiento(autor.getFechaNacimiento());
         autorDto.setNacionalidad(autor.getNacionalidad());
-
         return autorDto;
     }
+
 
     @Autowired
     private EntityManager entityManager;
@@ -171,9 +178,9 @@ public class AutorRestController {
         return autoresDto;
     }
 
-    private Predicate getPredicate(SearchCriteria criteria, CriteriaBuilder builder, Root<Autor> root) {
+    /*private Predicate getPredicate(SearchCriteria criteria, CriteriaBuilder builder, Root<Autor> root) {
         switch (criteria.getOperation()) {
-            case "EQUALS":
+            case "EQUALS","equals":
                 try {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
                     Date fecha = sdf.parse(criteria.getValue());
@@ -183,7 +190,7 @@ public class AutorRestController {
                     // Manejar el error según sea necesario
                     return null;
                 }
-            case "LESS_THAN":
+            case "LESS_THAN","less_than":
                 try {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
                     Date fecha = sdf.parse(criteria.getValue());
@@ -193,7 +200,7 @@ public class AutorRestController {
                     // Manejar el error según sea necesario
                     return null;
                 }
-            case "GREATER_THAN":
+            case "GREATER_THAN","greather_than":
                 try {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
                     Date fecha = sdf.parse(criteria.getValue());
@@ -203,7 +210,7 @@ public class AutorRestController {
                     // Manejar el error según sea necesario
                     return null;
                 }
-            case "CONTAINS":
+            case "CONTAINS" ,"contains":
                 if (criteria.getValue() instanceof String) {
                     String value = (String) criteria.getValue();
                     return builder.like(root.get(criteria.getKey()), "%" + value + "%");
@@ -214,6 +221,27 @@ public class AutorRestController {
         }
         return null;
 
+    }
+
+     */
+    private Predicate getPredicate(SearchCriteria criteria, CriteriaBuilder builder, Root<Autor> root) {
+        switch (criteria.getOperation()) {
+            case "EQUALS","equals":
+                return builder.equal(root.get(criteria.getKey()), criteria.getValue());
+            case "GREATER_THAN","greather_than":
+                return builder.greaterThan(root.get(criteria.getKey()), criteria.getValue());
+            case "LESS_THAN","less_than":
+                return builder.lessThan(root.get(criteria.getKey()), criteria.getValue());
+            case "CONTAINS","contains":
+                if (criteria.getValue() instanceof String) {
+                    String value = (String) criteria.getValue();
+                    return builder.like(root.get(criteria.getKey()), "%" + value + "%");
+                }
+                break;
+            default:
+                return null;
+        }
+        return null;
     }
 
     private AutorDto convertirAAutorDto(Autor autor) {

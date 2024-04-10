@@ -1,5 +1,6 @@
 package com.gestion.controller;
 
+import com.gestion.dto.AutorDto;
 import com.gestion.dto.GeneroDto;
 import com.gestion.entities.Genero;
 import com.gestion.exception.BibliotecaNotFoundException;
@@ -27,16 +28,7 @@ public class GeneroRestController {
     @Autowired
     GeneroRepository generoRepository;
 
-    private GeneroDto convertToDto(Genero genero) {
-        GeneroDto generoDto = new GeneroDto();
-        generoDto.setId(genero.getId());
-        generoDto.setNombre(genero.getNombre());
-        generoDto.setDescripcion(genero.getDescripcion());
-        generoDto.setEdadRecomendada(genero.getEdadRecomendada());
-        generoDto.setUrlWikipedia(genero.getUrlWikipedia());
 
-        return generoDto;
-    }
 
     @GetMapping()
     public List<GeneroDto> list() {
@@ -73,7 +65,7 @@ public class GeneroRestController {
     @PostMapping
     public ResponseEntity<?> post(@RequestBody Genero input) {
         Genero save = generoRepository.save(input);
-        return ResponseEntity.ok(convertToDto(save));
+        return ResponseEntity.ok((save));
     }
 
     @DeleteMapping("/{id}")
@@ -88,7 +80,7 @@ public class GeneroRestController {
     }
 
     @GetMapping("/generos")
-    public Page<GeneroDto> getGeneros(
+    public List<GeneroDto> getGeneros(
             @RequestParam(name = "nombre", required = false) String nombre,
             @RequestParam(name = "descripcion", required = false) String descripcion,
             @RequestParam(name = "edadRecomendada", required = false) Integer edadRecomendada,
@@ -139,9 +131,25 @@ public class GeneroRestController {
         } else {
             generosPage = generoRepository.findAll(pageRequest);
         }
+        List<GeneroDto> generoDtoList = generosPage.getContent().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
 
-        return generosPage.map(this::convertToDto);
+        return generoDtoList;
+
+
     }
+    private GeneroDto convertToDto(Genero genero) {
+        GeneroDto generoDto = new GeneroDto();
+        generoDto.setId(genero.getId());
+        generoDto.setNombre(genero.getNombre());
+        generoDto.setDescripcion(genero.getDescripcion());
+        generoDto.setEdadRecomendada(genero.getEdadRecomendada());
+        generoDto.setUrlWikipedia(genero.getUrlWikipedia());
+
+        return generoDto;
+    }
+
 
     @Autowired
     private EntityManager entityManager;
