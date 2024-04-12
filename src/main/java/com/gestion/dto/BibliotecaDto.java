@@ -1,6 +1,9 @@
 package com.gestion.dto;
 
+import com.gestion.entities.Libro;
 import lombok.Data;
+
+import java.util.Set;
 
 @Data
 public class BibliotecaDto {
@@ -10,5 +13,6 @@ public class BibliotecaDto {
     private String telefono;
     private String email;
     private String sitioWeb;
+
 
 }

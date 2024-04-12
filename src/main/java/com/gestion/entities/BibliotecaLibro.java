@@ -3,12 +3,14 @@ package com.gestion.entities;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
-
+/*
 @Data
 @Entity
 @Table(name = "biblioteca_libro")
-public class BibliotecaLibro {
 
+ */
+public class BibliotecaLibro {
+/*
    @Id
    @GeneratedValue(strategy = GenerationType.AUTO)
    private Long id;
@@ -21,5 +23,7 @@ public class BibliotecaLibro {
     @ManyToOne(optional = true)
     @JoinColumn(name = "biblioteca_id")
     private Biblioteca biblioteca;
+
+ */
 
 }

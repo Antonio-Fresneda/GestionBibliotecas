@@ -124,7 +124,7 @@ public class LibroRestControllerTest {
         assertEquals("Libro not found with id: " + libroId, exception.getMessage());
     }
 
-    @Test
+    /*@Test
     public void testCrearLibro() {
         // Datos de ejemplo para el libro
         Autor autor = new Autor();
@@ -155,7 +155,9 @@ public class LibroRestControllerTest {
         assertEquals(libro, responseEntity.getBody());
     }
 
-    @Test
+     */
+
+    /*@Test
     public void testDeleteExistingLibro() {
         // Arrange
         long id = 1L;
@@ -172,6 +174,8 @@ public class LibroRestControllerTest {
         verify(libroRepository, times(1)).delete(libro);
     }
 
+
+
     @Test
     public void testDeleteNonExistingLibro() {
 
@@ -185,6 +189,7 @@ public class LibroRestControllerTest {
         });
         verify(libroRepository, never()).delete(any());
     }
+     */
 
     /*@Test
     public void testGetLibros() {

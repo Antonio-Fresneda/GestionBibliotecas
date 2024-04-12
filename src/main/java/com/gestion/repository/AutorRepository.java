@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecificationExecutor<Autor> {
 
@@ -33,6 +35,8 @@ public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecific
     Page<Autor> findAllByFechaNacimientoAndNacionalidad(Date fechaNacimiento, String nacionalidad, Pageable pageable);
 
     Page<Autor> findAllByNombreAndFechaNacimientoAndNacionalidad(String nombre, Date fechaNacimiento, String nacionalidad, Pageable pageable);
+
+    List<Autor> findByNombreAndFechaNacimientoAndNacionalidad(String nombre, Date fechaNacimiento, String nacionalidad);
 
     /*@Query(value = "SELECT * FROM Autor ORDER BY " +
             "CASE " +
@@ -69,12 +73,9 @@ public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecific
             "ELSE id END :direction", nativeQuery = true)
     Page<Autor> findAllOrderedBy(@Param("orderBy") String orderBy, @Param("direction") String direction, Pageable pageable);
 
-
-    @Transactional
     @Modifying
-    @Query("DELETE FROM LibroGenero lg WHERE lg.libro.autor.id = :autorId")
-    void deleteLibroGeneroByAutorId(@Param("autorId") long autorId);
-
+    @Query("UPDATE Libro l SET l.autor = null WHERE l.id = :libroId")
+    void eliminarRelacionLibro(@Param("libroId") Long libroId);
     @Transactional
     @Modifying
     @Query("DELETE FROM Libro l WHERE l.autor.id = :autorId")

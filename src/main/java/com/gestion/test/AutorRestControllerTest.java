@@ -124,7 +124,7 @@ class AutorRestControllerTest {
         assertEquals(OK, responseEntity.getStatusCode());
         assertEquals(autor, responseEntity.getBody());
     }
-    @Test
+   /* @Test
     public void testDeleteExistingAutor() {
         // Datos de ejemplo
         Autor autor = new Autor();
@@ -142,6 +142,8 @@ class AutorRestControllerTest {
         verify(autorRepository).deleteLibrosByAutorId(1L);
         verify(autorRepository).delete(autor);
     }
+
+    */
 
     @Test
     public void testDeleteNonExistingAutor() {

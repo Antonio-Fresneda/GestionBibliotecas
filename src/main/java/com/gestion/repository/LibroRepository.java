@@ -23,13 +23,7 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
     @Query("SELECT a FROM Libro a WHERE a.autor = ?1")
     List<Libro> findAllByAutor(Autor autor);
 
-   @Query(value = "SELECT * FROM Libro ORDER BY " +
-           "CASE " +
-           "WHEN :orderBy = 'titulo' THEN titulo " +
-           "WHEN :orderBy = 'anoPublicacion' THEN ano_publicacion " +
-           "WHEN :orderBy = 'isbn' THEN isbn " +
-           "ELSE id END ASC", nativeQuery = true)
-   Page<Libro> findAllOrderedBy(@Param("orderBy") String orderBy, Pageable pageable);
+    List<Libro> findByGenero(Genero genero);
 
     Page<Libro> findAllByTituloContaining(String titulo, Pageable pageable);
 
@@ -41,7 +35,6 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
     Page<Libro> findAllByTituloContainingAndAnoPublicacion(String titulo, Integer anoPublicacion, Pageable pageable);
 
     Page<Libro> findAllByTituloContainingAndIsbnContaining(String titulo, String isbn, Pageable pageable);
-
 
     Page<Libro> findAllByAnoPublicacionAndIsbnContaining(Integer anoPublicacion, String isbn, Pageable pageable);
 

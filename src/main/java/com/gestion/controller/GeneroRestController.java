@@ -3,8 +3,10 @@ package com.gestion.controller;
 import com.gestion.dto.AutorDto;
 import com.gestion.dto.GeneroDto;
 import com.gestion.entities.Genero;
+import com.gestion.entities.Libro;
 import com.gestion.exception.BibliotecaNotFoundException;
 import com.gestion.repository.GeneroRepository;
+import com.gestion.repository.LibroRepository;
 import com.gestion.search.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -28,6 +30,8 @@ public class GeneroRestController {
     @Autowired
     GeneroRepository generoRepository;
 
+    @Autowired
+    LibroRepository libroRepository;
 
 
     @GetMapping()
@@ -72,12 +76,26 @@ public class GeneroRestController {
     public ResponseEntity<?> delete(@PathVariable(name = "id") long id) {
         Optional<Genero> findById = generoRepository.findById(id);
         if (findById.isPresent()) {
-            generoRepository.delete(findById.get());
+            Genero genero = findById.get();
+
+            // Buscar todos los libros relacionados con el género
+            List<Libro> libros = libroRepository.findByGenero(genero);
+
+            // Eliminar la referencia al género en los libros
+            libros.forEach(libro -> libro.setGenero(null));
+
+            // Guardar los cambios en los libros
+            libroRepository.saveAll(libros);
+
+            // Finalmente, eliminar el género
+            generoRepository.delete(genero);
+
             return ResponseEntity.ok().build();
         } else {
             throw new BibliotecaNotFoundException("Genero not found with id: " + id);
         }
     }
+
 
     @GetMapping("/generos")
     public List<GeneroDto> getGeneros(

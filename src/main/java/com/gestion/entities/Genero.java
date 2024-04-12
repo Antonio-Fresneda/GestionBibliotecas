@@ -25,7 +25,5 @@ public class Genero {
     private Integer edadRecomendada;
     private String urlWikipedia;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "genero", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<LibroGenero> libros = new ArrayList<>();
+
 }

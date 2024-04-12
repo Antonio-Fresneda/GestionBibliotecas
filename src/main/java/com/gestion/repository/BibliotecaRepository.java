@@ -8,6 +8,7 @@ import org.springframework.cglib.core.Block;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -22,6 +23,9 @@ public interface BibliotecaRepository extends JpaRepository<Biblioteca, Long> {
     @Query("SELECT a FROM Biblioteca a WHERE a.direccion = ?1")
     List<Biblioteca> findAllByDireccion(String direccion);
 
+    @Modifying
+    @Query(value = "DELETE FROM biblioteca_libro WHERE libro_id = :libroId", nativeQuery = true)
+    void eliminarRelacionLibro(@Param("libroId") Long libroId);
     @Query("SELECT a FROM Biblioteca a WHERE a.telefono = ?1")
     List<Biblioteca> findAllByTelefono(String telefono);
 

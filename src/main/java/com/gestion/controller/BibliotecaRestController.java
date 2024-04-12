@@ -2,6 +2,7 @@ package com.gestion.controller;
 
 
 import com.gestion.dto.BibliotecaDto;
+import com.gestion.dto.LibroDto;
 import com.gestion.entities.*;
 import com.gestion.exception.BibliotecaNotFoundException;
 import com.gestion.repository.*;
@@ -39,8 +40,6 @@ public class BibliotecaRestController {
     @Autowired
     GeneroRepository generoRepository;
 
-    @Autowired
-    BibliotecaLibroRepository bibliotecaLibroRepository;
 
 
     @GetMapping()
@@ -72,7 +71,7 @@ public class BibliotecaRestController {
         return ResponseEntity.ok(convertToDto(savedBiblioteca));
     }
 
-    @PostMapping("/crear")
+    /*@PostMapping("/crear")
     public ResponseEntity<Biblioteca> crearBiblioteca(@RequestBody Biblioteca biblioteca) {
         if (biblioteca.getId() == null || biblioteca.getId() == 0) {
             biblioteca = bibliotecaRepository.save(biblioteca);
@@ -120,12 +119,71 @@ public class BibliotecaRestController {
         return new ResponseEntity<>(biblioteca, HttpStatus.CREATED);
     }
 
+     */
+    @PostMapping()
+    public ResponseEntity<Biblioteca> crearBiblioteca(@RequestBody Biblioteca biblioteca) {
+
+        if (biblioteca.getId() == null || biblioteca.getId() == 0) {
+            biblioteca = bibliotecaRepository.save(biblioteca);
+        }
+
+        Set<Libro> libros = new HashSet<>();
+
+        // Verificar si la colección de libros no es nula antes de iterar sobre ella
+        if (biblioteca.getLibros() != null) {
+            for (Libro libro : biblioteca.getLibros()) {
+                Libro existingLibro = libroRepository.findByTitulo(libro.getTitulo());
+
+                if (existingLibro == null) {
+                    Autor autor = libro.getAutor();
+                    if (autor != null && autor.getNombre() != null && autor.getFechaNacimiento() != null && autor.getNacionalidad() != null) {
+                        // Comprobar si el autor ya existe en la base de datos por nombre, fecha de nacimiento y nacionalidad
+                        List<Autor> existingAutorList = autorRepository.findByNombreAndFechaNacimientoAndNacionalidad(autor.getNombre(), autor.getFechaNacimiento(), autor.getNacionalidad());
+                        if (!existingAutorList.isEmpty()) {
+                            // Si el autor ya existe, asignamos el existente en lugar de crear uno nuevo
+                            autor = existingAutorList.get(0); // Utilizamos el autor existente
+                        } else {
+                            // Si no existe, lo guardamos como un nuevo autor
+                            autor = autorRepository.save(autor);
+                        }
+                        // Asignar el autor al libro
+                        libro.setAutor(autor);
+                    }
+
+                    Genero genero = libro.getGenero();
+                    if (genero != null && genero.getNombre() != null && !genero.getNombre().isEmpty()) {
+                        // Buscar el género por nombre en la base de datos
+                        Genero existingGenero = generoRepository.findByNombre(genero.getNombre());
+
+                        if (existingGenero != null) {
+                            // Si el género ya existe en la base de datos, lo asignamos al libro
+                            genero = existingGenero; // Utilizamos el género existente
+                        } else {
+                            // Si el género no existe en la base de datos, lo guardamos y luego lo asignamos al libro
+                            genero = generoRepository.save(genero);
+                        }
+                        // Asignar el género al libro
+                        libro.setGenero(genero);
+                    }
+
+                    // Guardar el libro
+                    libro = libroRepository.save(libro);
+                }
+
+                libros.add(libro);
+            }
+        }
+
+        biblioteca.setLibros(libros);
+        biblioteca = bibliotecaRepository.save(biblioteca);
+
+        return new ResponseEntity<>(biblioteca, HttpStatus.CREATED);
+    }
 
 
 
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable(name = "id") long id) {
+    /*@DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteBiblioteca(@PathVariable(name = "id") long id) {
         Optional<Biblioteca> bibliotecaOptional = bibliotecaRepository.findById(id);
         if (bibliotecaOptional.isEmpty()) {
             throw new BibliotecaNotFoundException("Biblioteca with id " + id + " not found");
@@ -133,6 +191,27 @@ public class BibliotecaRestController {
         bibliotecaRepository.deleteById(id);
         return ResponseEntity.ok().build();
     }
+
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteBiblioteca(@PathVariable(name = "id") long id) {
+        Optional<Biblioteca> bibliotecaOptional = bibliotecaRepository.findById(id);
+        if (bibliotecaOptional.isEmpty()) {
+            throw new BibliotecaNotFoundException("Biblioteca with id " + id + " not found");
+        }
+
+        // Eliminar la relación entre la biblioteca y los libros
+        Biblioteca biblioteca = bibliotecaOptional.get();
+        biblioteca.getLibros().clear();
+        bibliotecaRepository.save(biblioteca);
+
+        // Eliminar la biblioteca
+        bibliotecaRepository.deleteById(id);
+
+        return ResponseEntity.ok().build();
+    }
+
+
 
     @GetMapping("/filtros")
     public Page<BibliotecaDto> busquedaDinamica(
@@ -189,6 +268,7 @@ public class BibliotecaRestController {
         bibliotecaDto.setTelefono(biblioteca.getTelefono());
         bibliotecaDto.setEmail(biblioteca.getEmail());
         bibliotecaDto.setSitioWeb(biblioteca.getSitioWeb());
+        //bibliotecaDto.setLibros(biblioteca.getLibros());
         return bibliotecaDto;
     }
 

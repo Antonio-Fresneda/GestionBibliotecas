@@ -2,12 +2,10 @@ package com.gestion.controller;
 
 import com.gestion.dto.AutorDto;
 import com.gestion.dto.LibroDto;
-import com.gestion.entities.Autor;
-import com.gestion.entities.Genero;
-import com.gestion.entities.Libro;
-import com.gestion.entities.LibroGenero;
+import com.gestion.entities.*;
 import com.gestion.exception.BibliotecaNotFoundException;
 import com.gestion.repository.AutorRepository;
+import com.gestion.repository.BibliotecaRepository;
 import com.gestion.repository.GeneroRepository;
 import com.gestion.repository.LibroRepository;
 import com.gestion.search.BusquedaLibroRequest;
@@ -24,9 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -41,6 +37,9 @@ public class LibroRestController {
 
     @Autowired
     AutorRepository autorRepository;
+
+    @Autowired
+    BibliotecaRepository bibliotecaRepository;
 
     @GetMapping()
     public List<LibroDto> list() {
@@ -66,22 +65,13 @@ public class LibroRestController {
             find.setAnoPublicacion(input.getAnoPublicacion());
             find.setIsbn(input.getIsbn());
             find.setAutor(input.getAutor());
+            find.setGenero(input.getGenero());
 
-            if (input.getGeneros() != null) {
-                find.getGeneros().clear();
-                find.getGeneros().addAll(input.getGeneros());
-                for (LibroGenero genero : find.getGeneros()) {
-                    genero.setLibro(find);
-                }
-            }
-
-            find.setLibroBibliotecas(input.getLibroBibliotecas());
         }
         Libro save = libroRepository.save(find);
         return ResponseEntity.ok(save);
     }
-
-    @PostMapping("/crear")
+    /*@PostMapping("/crear")
     public ResponseEntity<Libro> crearLibro(@RequestBody Libro libro) {
 
         Autor autor = libro.getAutor();
@@ -108,16 +98,57 @@ public class LibroRestController {
 
         return new ResponseEntity<>(nuevoLibro, HttpStatus.CREATED);
     }
+     */
+    @PostMapping()
+    public ResponseEntity<Libro> crearLibro(@RequestBody Libro libro) {
+
+        Autor autor = libro.getAutor();
+        if (autor != null && autor.getNombre() != null && autor.getFechaNacimiento() != null && autor.getNacionalidad() != null) {
+            // Comprobar si el autor ya existe en la base de datos por nombre, fecha de nacimiento y nacionalidad
+            List<Autor> existingAutorList = autorRepository.findByNombreAndFechaNacimientoAndNacionalidad(autor.getNombre(), autor.getFechaNacimiento(), autor.getNacionalidad());
+            if (!existingAutorList.isEmpty()) {
+                // Si el autor ya existe, asignamos el existente en lugar de crear uno nuevo
+                libro.setAutor(existingAutorList.get(0)); // Suponiendo que no debería haber duplicados
+            } else {
+                // Si no existe, lo guardamos como un nuevo autor
+                autor = autorRepository.save(autor);
+                libro.setAutor(autor);
+            }
+        }
+        Genero genero = libro.getGenero();
+        if (genero != null && genero.getNombre() != null && !genero.getNombre().isEmpty()) {
+            // Buscar el género por nombre en la base de datos
+            Genero existingGenero = (Genero) generoRepository.findByNombre(genero.getNombre());
+
+            if (existingGenero != null) {
+                // Si el género ya existe en la base de datos, lo asignamos al libro
+                libro.setGenero(existingGenero);
+            } else {
+                // Si el género no existe en la base de datos, lo guardamos y luego lo asignamos al libro
+                genero = generoRepository.save(genero);
+                libro.setGenero(genero);
+            }
+        }
+
+
+
+        Libro nuevoLibro = libroRepository.save(libro);
+
+        return new ResponseEntity<>(nuevoLibro, HttpStatus.CREATED);
+    }
+
+
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable(name = "id") long id) {
-        Optional<Libro> findById = libroRepository.findById(id);
-        if (findById.isPresent()) {
-            libroRepository.delete(findById.get());
-        } else {
-            throw new BibliotecaNotFoundException("Libro not found with id: " + id);
+    public ResponseEntity<?> deleteLibro(@PathVariable(name = "id") long id) {
+        Optional<Libro> libroOptional = libroRepository.findById(id);
+        if (libroOptional.isEmpty()) {
+            throw new BibliotecaNotFoundException("Libro with id " + id + " not found");
         }
+
+        libroRepository.deleteById(id);
+
         return ResponseEntity.ok().build();
     }
 
@@ -172,7 +203,17 @@ public class LibroRestController {
         libroDTO.setTitulo(libro.getTitulo());
         libroDTO.setAnoPublicacion(libro.getAnoPublicacion());
         libroDTO.setIsbn(libro.getIsbn());
+        libroDTO.setAutorId(libro.getAutor().getId());
+        libroDTO.setGeneroId(libro.getGenero().getId());
 
+
+        /*List<Long> generoIds = new ArrayList<>();
+        for (LibroGenero libroGenero : libro.getGeneros()) {
+            generoIds.add(libroGenero.getGenero().getId());
+        }
+        libroDTO.setGeneroIds(generoIds);
+
+         */
 
         return libroDTO;
     }

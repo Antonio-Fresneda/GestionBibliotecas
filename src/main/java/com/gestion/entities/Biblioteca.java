@@ -5,7 +5,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -25,8 +27,22 @@ public class Biblioteca {
 	private String email;
 	private String sitioWeb;
 
-	@OneToMany(mappedBy = "biblioteca")
-	private List<BibliotecaLibro> libroBibliotecas = new ArrayList<>();
+	/*@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "biblioteca_libro", joinColumns = {
+			@JoinColumn(name = "biblioteca_id", nullable = true) }, inverseJoinColumns = {
+			@JoinColumn(name = "libro_id", nullable = true) })
+	private Set<Libro> libros;
+
+	 */
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "biblioteca_libro", joinColumns = {
+			@JoinColumn(name = "biblioteca_id", nullable = true) }, inverseJoinColumns = {
+			@JoinColumn(name = "libro_id", nullable = true) })
+	private Set<Libro> libros;
+
+
+
+
 
 
 }

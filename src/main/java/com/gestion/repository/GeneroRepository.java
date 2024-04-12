@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,11 +21,14 @@ import java.util.Map;
 public interface GeneroRepository extends JpaRepository<Genero, Long>, JpaSpecificationExecutor<Genero> {
 
     @Query("SELECT g FROM Genero g WHERE g.nombre = ?1")
-    List<Genero> findByNombre(String nombre);
+    Genero findByNombre(String nombre);
 
     @Query("SELECT g FROM Genero g WHERE g.descripcion =?1")
     List<Genero> findAllByDescripcion(String descripcion);
 
+    @Modifying
+    @Query("UPDATE Libro l SET l.genero = null WHERE l.id = :libroId")
+    void eliminarRelacionLibro(@Param("libroId") Long libroId);
     @Query("SELECT g FROM Genero g WHERE g.edadRecomendada = ?1")
     List<Genero> findAllByEdadRecomendada(String edadRecomendada);
 

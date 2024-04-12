@@ -74,7 +74,6 @@ public class AutorRestController {
         Optional<Autor> autorOptional = autorRepository.findById(id);
         if (autorOptional.isPresent()) {
             Autor autor = autorOptional.get();
-            autorRepository.deleteLibroGeneroByAutorId(autor.getId());
             autorRepository.deleteLibrosByAutorId(autor.getId());
             autorRepository.delete(autor);
             return ResponseEntity.ok().build();
@@ -82,6 +81,11 @@ public class AutorRestController {
             throw new BibliotecaNotFoundException("Autor not found with id: " + id);
         }
     }
+
+
+
+
+
 
     @GetMapping("/autores")
     public List<AutorDto> getAutores(

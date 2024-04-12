@@ -5,10 +5,10 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
-@Entity
-@Table(name = "libro_genero")
+//@Entity
+//@Table(name = "libro_genero")
 public class LibroGenero {
-    @Id
+  /*  @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
@@ -20,5 +20,7 @@ public class LibroGenero {
     @ManyToOne
     @JoinColumn(name = "genero_id")
     private Genero genero;
+
+   */
 
 }
