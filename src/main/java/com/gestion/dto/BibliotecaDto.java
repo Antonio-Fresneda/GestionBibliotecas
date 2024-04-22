@@ -14,5 +14,4 @@ public class BibliotecaDto {
     private String email;
     private String sitioWeb;
 
-
 }

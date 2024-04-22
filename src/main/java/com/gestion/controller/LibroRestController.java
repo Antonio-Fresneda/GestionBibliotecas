@@ -197,31 +197,12 @@ public class LibroRestController {
 
 
 
-    private LibroDto convertToDto(Libro libro) {
-        LibroDto libroDTO = new LibroDto();
-        libroDTO.setId(libro.getId());
-        libroDTO.setTitulo(libro.getTitulo());
-        libroDTO.setAnoPublicacion(libro.getAnoPublicacion());
-        libroDTO.setIsbn(libro.getIsbn());
-        libroDTO.setAutorId(libro.getAutor().getId());
-        libroDTO.setGeneroId(libro.getGenero().getId());
 
-
-        /*List<Long> generoIds = new ArrayList<>();
-        for (LibroGenero libroGenero : libro.getGeneros()) {
-            generoIds.add(libroGenero.getGenero().getId());
-        }
-        libroDTO.setGeneroIds(generoIds);
-
-         */
-
-        return libroDTO;
-    }
 
     @Autowired
     private EntityManager entityManager;
 
-    @PostMapping("/buscar-libros")
+    /*@PostMapping("/buscar-libros")
     public List<LibroDto> buscarLibros(@RequestBody BusquedaLibroRequest request) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Libro> criteriaQuery = criteriaBuilder.createQuery(Libro.class);
@@ -262,6 +243,78 @@ public class LibroRestController {
         return librosDto;
     }
 
+     */
+    @PostMapping("/buscar-libros")
+    public List<LibroDto> buscarLibros(@RequestBody BusquedaLibroRequest request) {
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Libro> criteriaQuery = criteriaBuilder.createQuery(Libro.class);
+        Root<Libro> root = criteriaQuery.from(Libro.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        for (SearchCriteria criteria : request.getListSearchCriteria()) {
+            String key = criteria.getKey();
+            String value = criteria.getValue().toString(); // Convertimos el valor a String
+
+            switch (key) {
+                case "titulo":
+                case "isbn":
+                    predicates.add(criteriaBuilder.like(root.get(key), "%" + value + "%"));
+                    break;
+                case "anoPublicacion":
+                    try {
+                        int ano = Integer.parseInt(value);
+                        predicates.add(criteriaBuilder.equal(root.get(key), ano));
+                    } catch (NumberFormatException e) {
+                        // Ignorar si no se puede convertir a entero
+                    }
+                    break;
+                case "autorId":
+                case "generoId":
+                    try {
+                        Long id = Long.parseLong(value);
+                        predicates.add(criteriaBuilder.equal(root.get(key), id));
+                    } catch (NumberFormatException e) {
+                        // Ignorar si no se puede convertir a Long
+                    }
+                    break;
+                default:
+                    // Ignorar cualquier otro atributo
+                    break;
+            }
+        }
+
+        if (!predicates.isEmpty()) {
+            Predicate finalPredicate = criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+            criteriaQuery.where(finalPredicate);
+        }
+
+        for (OrderCriteria orderCriteria : request.getListOrderCriteria()) {
+            if (orderCriteria.getSortBy() != null && !orderCriteria.getSortBy().isEmpty()) {
+                if (orderCriteria.getValueSortOrder() != null && !orderCriteria.getValueSortOrder().isEmpty()) {
+                    if (orderCriteria.getValueSortOrder().equalsIgnoreCase("ASC")) {
+                        criteriaQuery.orderBy(criteriaBuilder.asc(root.get(orderCriteria.getSortBy())));
+                    } else if (orderCriteria.getValueSortOrder().equalsIgnoreCase("DESC")) {
+                        criteriaQuery.orderBy(criteriaBuilder.desc(root.get(orderCriteria.getSortBy())));
+                    }
+                }
+            }
+        }
+
+        List<Libro> libros = entityManager.createQuery(criteriaQuery)
+                .setFirstResult(request.getPage().getPageIndex() * request.getPage().getPageSize())
+                .setMaxResults(request.getPage().getPageSize())
+                .getResultList();
+
+        List<LibroDto> librosDto = new ArrayList<>();
+        for (Libro libro : libros) {
+            librosDto.add(convertToDto(libro));
+        }
+
+        return librosDto;
+    }
+
+
     private Predicate getPredicate(SearchCriteria criteria, CriteriaBuilder builder, Root<Libro> root) {
         switch (criteria.getOperation()) {
             case "EQUALS":
@@ -283,12 +336,24 @@ public class LibroRestController {
     }
 
 
-    private LibroDto convertirALibroDto(Libro libro) {
-        LibroDto libroDto = new LibroDto();
-        libroDto.setId(libro.getId());
-        libroDto.setTitulo(libro.getTitulo());
-        libroDto.setAnoPublicacion(libro.getAnoPublicacion());
-        libroDto.setIsbn(libro.getIsbn());
-        return libroDto;
+    private LibroDto convertToDto(Libro libro) {
+        LibroDto libroDTO = new LibroDto();
+        libroDTO.setId(libro.getId());
+        libroDTO.setTitulo(libro.getTitulo());
+        libroDTO.setAnoPublicacion(libro.getAnoPublicacion());
+        libroDTO.setIsbn(libro.getIsbn());
+        libroDTO.setAutorId(libro.getAutor().getId());
+        libroDTO.setGeneroId(libro.getGenero().getId());
+
+
+        /*List<Long> generoIds = new ArrayList<>();
+        for (LibroGenero libroGenero : libro.getGeneros()) {
+            generoIds.add(libroGenero.getGenero().getId());
+        }
+        libroDTO.setGeneroIds(generoIds);
+
+         */
+
+        return libroDTO;
     }
 }

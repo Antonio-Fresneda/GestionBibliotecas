@@ -70,6 +70,20 @@ public class BibliotecaRestController {
         Biblioteca savedBiblioteca = bibliotecaRepository.save(biblioteca);
         return ResponseEntity.ok(convertToDto(savedBiblioteca));
     }
+    /* @PutMapping("/{id}")
+    public ResponseEntity<?> put(@PathVariable(name = "id") long id, @RequestBody Biblioteca input) {
+        Biblioteca biblioteca = bibliotecaRepository.findById(id)
+                .orElseThrow(() -> new BibliotecaNotFoundException("Biblioteca not found with id: " + id));
+        biblioteca.setNombre(input.getNombre());
+        biblioteca.setDireccion(input.getDireccion());
+        biblioteca.setTelefono(input.getTelefono());
+        biblioteca.setEmail(input.getEmail());
+        biblioteca.setSitioWeb(input.getSitioWeb());
+        Biblioteca savedBiblioteca = bibliotecaRepository.save(biblioteca);
+        return ResponseEntity.ok(savedBiblioteca);
+    }*/
+
+
 
     /*@PostMapping("/crear")
     public ResponseEntity<Biblioteca> crearBiblioteca(@RequestBody Biblioteca biblioteca) {
@@ -120,6 +134,8 @@ public class BibliotecaRestController {
     }
 
      */
+
+
     @PostMapping()
     public ResponseEntity<Biblioteca> crearBiblioteca(@RequestBody Biblioteca biblioteca) {
 
@@ -275,7 +291,7 @@ public class BibliotecaRestController {
     @Autowired
     private EntityManager entityManager;
 
-    @PostMapping("/buscar-bibliotecas")
+    /*@PostMapping("/buscar-bibliotecas")
     public List<BibliotecaDto> buscarBibliotecas(@RequestBody BusquedaLibroRequest request) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Biblioteca> criteriaQuery = criteriaBuilder.createQuery(Biblioteca.class);
@@ -315,6 +331,63 @@ public class BibliotecaRestController {
 
         return bibliotecasDto;
     }
+
+     */
+    @PostMapping("/buscar-bibliotecas")
+    public List<BibliotecaDto> buscarBibliotecas(@RequestBody BusquedaLibroRequest request) {
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Biblioteca> criteriaQuery = criteriaBuilder.createQuery(Biblioteca.class);
+        Root<Biblioteca> root = criteriaQuery.from(Biblioteca.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        for (SearchCriteria criteria : request.getListSearchCriteria()) {
+            String key = criteria.getKey();
+            String value = criteria.getValue().toString(); // Convertimos el valor a String
+
+            switch (key) {
+                case "nombre":
+                case "direccion":
+                case "email":
+                case "sitioWeb":
+                    predicates.add(criteriaBuilder.like(root.get(key), "%" + value + "%"));
+                    break;
+                case "telefono":
+                    predicates.add(criteriaBuilder.like(root.get(key), "%" + value + "%"));
+                    break;
+                default:
+                    // Manejar casos adicionales según sea necesario
+            }
+        }
+
+        Predicate finalPredicate = criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+        criteriaQuery.where(finalPredicate);
+
+        for (OrderCriteria orderCriteria : request.getListOrderCriteria()) {
+            if (orderCriteria.getSortBy() != null && !orderCriteria.getSortBy().isEmpty()) {
+                if (orderCriteria.getValueSortOrder() != null && !orderCriteria.getValueSortOrder().isEmpty()) {
+                    if (orderCriteria.getValueSortOrder().equalsIgnoreCase("ASC")) {
+                        criteriaQuery.orderBy(criteriaBuilder.asc(root.get(orderCriteria.getSortBy())));
+                    } else if (orderCriteria.getValueSortOrder().equalsIgnoreCase("DESC")) {
+                        criteriaQuery.orderBy(criteriaBuilder.desc(root.get(orderCriteria.getSortBy())));
+                    }
+                }
+            }
+        }
+
+        List<Biblioteca> bibliotecas = entityManager.createQuery(criteriaQuery)
+                .setFirstResult(request.getPage().getPageIndex() * request.getPage().getPageSize())
+                .setMaxResults(request.getPage().getPageSize())
+                .getResultList();
+
+        List<BibliotecaDto> bibliotecasDto = new ArrayList<>();
+        for (Biblioteca biblioteca : bibliotecas) {
+            bibliotecasDto.add(convertirABibliotecaDto(biblioteca));
+        }
+
+        return bibliotecasDto;
+    }
+
 
     private Predicate getPredicate(SearchCriteria criteria, CriteriaBuilder builder, Root<Biblioteca> root) {
         switch (criteria.getOperation()) {

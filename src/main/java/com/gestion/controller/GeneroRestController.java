@@ -171,7 +171,7 @@ public class GeneroRestController {
 
     @Autowired
     private EntityManager entityManager;
-    @PostMapping("/buscar-generos")
+   /* @PostMapping("/buscar-generos")
     public List<GeneroDto> buscarGeneros(@RequestBody BusquedaLibroRequest request) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Genero> criteriaQuery = criteriaBuilder.createQuery(Genero.class);
@@ -211,6 +211,67 @@ public class GeneroRestController {
 
         return generosDto;
     }
+
+    */
+   @PostMapping("/buscar-generos")
+   public List<GeneroDto> buscarGeneros(@RequestBody BusquedaLibroRequest request) {
+       CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+       CriteriaQuery<Genero> criteriaQuery = criteriaBuilder.createQuery(Genero.class);
+       Root<Genero> root = criteriaQuery.from(Genero.class);
+
+       List<Predicate> predicates = new ArrayList<>();
+
+       for (SearchCriteria criteria : request.getListSearchCriteria()) {
+           String key = criteria.getKey();
+           String value = criteria.getValue().toString(); // Convertimos el valor a String
+
+           switch (key) {
+               case "nombre":
+               case "descripcion":
+               case "urlWikipedia":
+                   predicates.add(criteriaBuilder.like(root.get(key), "%" + value + "%"));
+                   break;
+               case "edadRecomendada":
+                   try {
+                       Long edad = Long.parseLong(value);
+                       predicates.add(criteriaBuilder.equal(root.get(key), edad));
+                   } catch (NumberFormatException e) {
+
+                   }
+                   break;
+               default:
+
+           }
+       }
+
+       Predicate finalPredicate = criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+       criteriaQuery.where(finalPredicate);
+
+       for (OrderCriteria orderCriteria : request.getListOrderCriteria()) {
+           if (orderCriteria.getSortBy() != null && !orderCriteria.getSortBy().isEmpty()) {
+               if (orderCriteria.getValueSortOrder() != null && !orderCriteria.getValueSortOrder().isEmpty()) {
+                   if (orderCriteria.getValueSortOrder().equalsIgnoreCase("ASC")) {
+                       criteriaQuery.orderBy(criteriaBuilder.asc(root.get(orderCriteria.getSortBy())));
+                   } else if (orderCriteria.getValueSortOrder().equalsIgnoreCase("DESC")) {
+                       criteriaQuery.orderBy(criteriaBuilder.desc(root.get(orderCriteria.getSortBy())));
+                   }
+               }
+           }
+       }
+
+       List<Genero> generos = entityManager.createQuery(criteriaQuery)
+               .setFirstResult(request.getPage().getPageIndex() * request.getPage().getPageSize())
+               .setMaxResults(request.getPage().getPageSize())
+               .getResultList();
+
+       List<GeneroDto> generosDto = new ArrayList<>();
+       for (Genero genero : generos) {
+           generosDto.add(convertirAGeneroDto(genero));
+       }
+
+       return generosDto;
+   }
+
 
     private Predicate getPredicate(SearchCriteria criteria, CriteriaBuilder builder, Root<Genero> root) {
         switch (criteria.getOperation()) {

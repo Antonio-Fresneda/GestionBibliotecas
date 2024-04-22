@@ -27,13 +27,6 @@ public class Biblioteca {
 	private String email;
 	private String sitioWeb;
 
-	/*@ManyToMany(fetch = FetchType.EAGER)
-	@JoinTable(name = "biblioteca_libro", joinColumns = {
-			@JoinColumn(name = "biblioteca_id", nullable = true) }, inverseJoinColumns = {
-			@JoinColumn(name = "libro_id", nullable = true) })
-	private Set<Libro> libros;
-
-	 */
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(name = "biblioteca_libro", joinColumns = {
 			@JoinColumn(name = "biblioteca_id", nullable = true) }, inverseJoinColumns = {

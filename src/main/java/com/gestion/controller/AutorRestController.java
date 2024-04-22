@@ -82,11 +82,6 @@ public class AutorRestController {
         }
     }
 
-
-
-
-
-
     @GetMapping("/autores")
     public List<AutorDto> getAutores(
             @RequestParam(name = "nombre", required = false) String nombre,
@@ -143,7 +138,7 @@ public class AutorRestController {
     @Autowired
     private EntityManager entityManager;
 
-    @PostMapping("/buscar-autores")
+    /*@PostMapping("/buscar-autores")
     public List<AutorDto> buscarAutores(@RequestBody BusquedaLibroRequest request) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Autor> criteriaQuery = criteriaBuilder.createQuery(Autor.class);
@@ -182,52 +177,49 @@ public class AutorRestController {
         return autoresDto;
     }
 
-    /*private Predicate getPredicate(SearchCriteria criteria, CriteriaBuilder builder, Root<Autor> root) {
-        switch (criteria.getOperation()) {
-            case "EQUALS","equals":
-                try {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-                    Date fecha = sdf.parse(criteria.getValue());
-                    return builder.equal(root.get(criteria.getKey()), fecha);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                    // Manejar el error según sea necesario
-                    return null;
-                }
-            case "LESS_THAN","less_than":
-                try {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-                    Date fecha = sdf.parse(criteria.getValue());
-                    return builder.lessThan(root.get(criteria.getKey()), fecha);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                    // Manejar el error según sea necesario
-                    return null;
-                }
-            case "GREATER_THAN","greather_than":
-                try {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-                    Date fecha = sdf.parse(criteria.getValue());
-                    return builder.greaterThan(root.get(criteria.getKey()), fecha);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                    // Manejar el error según sea necesario
-                    return null;
-                }
-            case "CONTAINS" ,"contains":
-                if (criteria.getValue() instanceof String) {
-                    String value = (String) criteria.getValue();
-                    return builder.like(root.get(criteria.getKey()), "%" + value + "%");
-                }
-                break;
-            default:
-                return null;
-        }
-        return null;
+     */
 
+    @PostMapping("/buscar-autores")
+    public List<AutorDto> buscarAutores(@RequestBody BusquedaLibroRequest request) {
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Autor> criteriaQuery = criteriaBuilder.createQuery(Autor.class);
+        Root<Autor> root = criteriaQuery.from(Autor.class);
+
+        Predicate nombreContieneValor = criteriaBuilder.like(root.get("nombre"), "%" + request.getListSearchCriteria().get(0).getValue() + "%");
+        Predicate nacionalidadContieneValor = criteriaBuilder.like(root.get("nacionalidad"), "%" + request.getListSearchCriteria().get(1).getValue() + "%");
+
+        Predicate finalPredicate = criteriaBuilder.or(nombreContieneValor, nacionalidadContieneValor);
+
+        criteriaQuery.where(finalPredicate);
+
+        for (OrderCriteria orderCriteria : request.getListOrderCriteria()) {
+            if (orderCriteria.getSortBy() != null && !orderCriteria.getSortBy().isEmpty()) {
+                if (orderCriteria.getValueSortOrder() != null && !orderCriteria.getValueSortOrder().isEmpty()) {
+                    if (orderCriteria.getValueSortOrder().equalsIgnoreCase("ASC")) {
+                        criteriaQuery.orderBy(criteriaBuilder.asc(root.get(orderCriteria.getSortBy())));
+                    } else if (orderCriteria.getValueSortOrder().equalsIgnoreCase("DESC")) {
+                        criteriaQuery.orderBy(criteriaBuilder.desc(root.get(orderCriteria.getSortBy())));
+                    }
+                }
+            }
+        }
+
+        List<Autor> autores = entityManager.createQuery(criteriaQuery)
+                .setFirstResult(request.getPage().getPageIndex() * request.getPage().getPageSize())
+                .setMaxResults(request.getPage().getPageSize())
+                .getResultList();
+
+        // Convertir los autores a AutorDto
+        List<AutorDto> autoresDto = new ArrayList<>();
+        for (Autor autor : autores) {
+            autoresDto.add(convertirAAutorDto(autor));
+        }
+
+        return autoresDto;
     }
 
-     */
+
+
     private Predicate getPredicate(SearchCriteria criteria, CriteriaBuilder builder, Root<Autor> root) {
         switch (criteria.getOperation()) {
             case "EQUALS","equals":
