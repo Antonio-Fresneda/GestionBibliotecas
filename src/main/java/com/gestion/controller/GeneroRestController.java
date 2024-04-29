@@ -39,6 +39,11 @@ public class GeneroRestController {
         List<Genero> generos = generoRepository.findAll();
         return generos.stream().map(this::convertToDto).collect(Collectors.toList());
     }
+    @GetMapping("/count")
+    public ResponseEntity<Long> count() {
+        long count = generoRepository.count();
+        return ResponseEntity.ok(count);
+    }
 
     @GetMapping("/{id}")
     public GeneroDto get(@PathVariable(name = "id") long id) {

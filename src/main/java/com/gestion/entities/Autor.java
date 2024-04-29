@@ -22,7 +22,7 @@ public class Autor {
     private String nombre;
 
     @Column(nullable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "dd/MM/yyyy")
     private Date fechaNacimiento;
 
     private String nacionalidad;

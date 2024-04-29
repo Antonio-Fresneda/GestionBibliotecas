@@ -46,6 +46,11 @@ public class AutorRestController {
         return autorRepository.findAll();
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Long> count() {
+        long count = autorRepository.count();
+        return ResponseEntity.ok(count);
+    }
     @GetMapping("/{id}")
     public Autor get(@PathVariable(name = "id") long id) {
         return autorRepository.findById(id).orElseThrow(() -> new BibliotecaNotFoundException("Autor not found with id: " + id));

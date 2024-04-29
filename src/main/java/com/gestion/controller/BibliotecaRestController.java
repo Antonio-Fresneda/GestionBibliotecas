@@ -50,6 +50,12 @@ public class BibliotecaRestController {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Long> count() {
+        long count = bibliotecaRepository.count();
+        return ResponseEntity.ok(count);
+    }
+
     @GetMapping("/{id}")
     public BibliotecaDto get(@PathVariable(name = "id") long id) {
         Biblioteca biblioteca = bibliotecaRepository.findById(id)
@@ -136,7 +142,7 @@ public class BibliotecaRestController {
      */
 
 
-    @PostMapping()
+    /*@PostMapping()
     public ResponseEntity<Biblioteca> crearBiblioteca(@RequestBody Biblioteca biblioteca) {
 
         if (biblioteca.getId() == null || biblioteca.getId() == 0) {
@@ -194,6 +200,14 @@ public class BibliotecaRestController {
         biblioteca = bibliotecaRepository.save(biblioteca);
 
         return new ResponseEntity<>(biblioteca, HttpStatus.CREATED);
+    }
+
+     */
+
+    @PostMapping
+    public ResponseEntity<?> post(@RequestBody Biblioteca input) {
+        Biblioteca save = bibliotecaRepository.save(input);
+        return ResponseEntity.ok((save));
     }
 
 

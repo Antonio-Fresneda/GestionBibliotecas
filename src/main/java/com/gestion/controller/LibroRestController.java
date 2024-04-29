@@ -51,6 +51,12 @@ public class LibroRestController {
         return libroDTOs;
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Long> count() {
+        long count = libroRepository.count();
+        return ResponseEntity.ok(count);
+    }
+
     @GetMapping("/{id}")
     public LibroDto get(@PathVariable(name = "id") long id) {
         Libro libro = libroRepository.findById(id).orElseThrow(() -> new BibliotecaNotFoundException("Libro not found with id: " + id));
