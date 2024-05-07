@@ -73,6 +73,8 @@ public class AutorRestController {
         return ResponseEntity.ok(save);
     }
 
+
+
     @Transactional
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable(name = "id") long id) {
