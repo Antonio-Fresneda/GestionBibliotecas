@@ -1,7 +1,5 @@
 package com.gestion.service;
 
-
-
 import com.gestion.entities.Usuario;
 import com.gestion.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;

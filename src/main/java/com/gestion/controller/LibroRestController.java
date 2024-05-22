@@ -41,7 +41,8 @@ public class LibroRestController {
     @Autowired
     BibliotecaRepository bibliotecaRepository;
 
-    @GetMapping()
+
+   @GetMapping()
     public List<LibroDto> list() {
         List<Libro> libros = libroRepository.findAll();
         List<LibroDto> libroDTOs = new ArrayList<>();
@@ -50,6 +51,8 @@ public class LibroRestController {
         }
         return libroDTOs;
     }
+
+
 
     @GetMapping("/count")
     public ResponseEntity<Long> count() {
@@ -71,80 +74,17 @@ public class LibroRestController {
             find.setAnoPublicacion(input.getAnoPublicacion());
             find.setIsbn(input.getIsbn());
             find.setAutor(input.getAutor());
-            find.setGenero(input.getGenero());
+            find.setGeneros(input.getGeneros());
 
         }
         Libro save = libroRepository.save(find);
         return ResponseEntity.ok(save);
     }
-    /*@PostMapping("/crear")
-    public ResponseEntity<Libro> crearLibro(@RequestBody Libro libro) {
-
-        Autor autor = libro.getAutor();
-        if (autor != null && (autor.getId() == null || autor.getId() == 0)) {
-            autor = autorRepository.save(autor);
-        }
-
-        for (LibroGenero libroGenero : libro.getGeneros()) {
-            Genero genero = libroGenero.getGenero();
-            if (genero != null && (genero.getId() == null || genero.getId() == 0)) {
-                // Si el género no tiene un ID válido, lo guardamos como un nuevo género
-                genero = generoRepository.save(genero);
-            } else if (genero != null) {
-                // Si el género tiene un ID válido, verificamos si existe en la base de datos
-                Optional<Genero> existingGenero = generoRepository.findById(genero.getId());
-                if (existingGenero.isEmpty()) {
-                    // Si no existe, lo guardamos como un nuevo género
-                    genero = generoRepository.save(genero);
-                }
-            }
-        }
-
-        Libro nuevoLibro = libroRepository.save(libro);
-
-        return new ResponseEntity<>(nuevoLibro, HttpStatus.CREATED);
+    @PostMapping
+    public ResponseEntity<?> post(@RequestBody Libro input) {
+        Libro save = libroRepository.save(input);
+        return ResponseEntity.ok((save));
     }
-     */
-    @PostMapping()
-    public ResponseEntity<Libro> crearLibro(@RequestBody Libro libro) {
-
-        Autor autor = libro.getAutor();
-        if (autor != null && autor.getNombre() != null && autor.getFechaNacimiento() != null && autor.getNacionalidad() != null) {
-            // Comprobar si el autor ya existe en la base de datos por nombre, fecha de nacimiento y nacionalidad
-            List<Autor> existingAutorList = autorRepository.findByNombreAndFechaNacimientoAndNacionalidad(autor.getNombre(), autor.getFechaNacimiento(), autor.getNacionalidad());
-            if (!existingAutorList.isEmpty()) {
-                // Si el autor ya existe, asignamos el existente en lugar de crear uno nuevo
-                libro.setAutor(existingAutorList.get(0)); // Suponiendo que no debería haber duplicados
-            } else {
-                // Si no existe, lo guardamos como un nuevo autor
-                autor = autorRepository.save(autor);
-                libro.setAutor(autor);
-            }
-        }
-        Genero genero = libro.getGenero();
-        if (genero != null && genero.getNombre() != null && !genero.getNombre().isEmpty()) {
-            // Buscar el género por nombre en la base de datos
-            Genero existingGenero = (Genero) generoRepository.findByNombre(genero.getNombre());
-
-            if (existingGenero != null) {
-                // Si el género ya existe en la base de datos, lo asignamos al libro
-                libro.setGenero(existingGenero);
-            } else {
-                // Si el género no existe en la base de datos, lo guardamos y luego lo asignamos al libro
-                genero = generoRepository.save(genero);
-                libro.setGenero(genero);
-            }
-        }
-
-
-
-        Libro nuevoLibro = libroRepository.save(libro);
-
-        return new ResponseEntity<>(nuevoLibro, HttpStatus.CREATED);
-    }
-
-
-
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteLibro(@PathVariable(name = "id") long id) {
@@ -202,54 +142,9 @@ public class LibroRestController {
     }
 
 
-
-
-
     @Autowired
     private EntityManager entityManager;
 
-    /*@PostMapping("/buscar-libros")
-    public List<LibroDto> buscarLibros(@RequestBody BusquedaLibroRequest request) {
-        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Libro> criteriaQuery = criteriaBuilder.createQuery(Libro.class);
-        Root<Libro> root = criteriaQuery.from(Libro.class);
-
-        // Aplicar criterios de búsqueda
-        Predicate predicate = criteriaBuilder.conjunction();
-        for (SearchCriteria criteria : request.getListSearchCriteria()) {
-            predicate = criteriaBuilder.and(predicate, getPredicate(criteria, criteriaBuilder, root));
-        }
-        criteriaQuery.where(predicate);
-
-        // Ordenar según criterios de orden
-        for (OrderCriteria orderCriteria : request.getListOrderCriteria()) {
-            if (orderCriteria.getSortBy() != null && !orderCriteria.getSortBy().isEmpty()) {
-                if (orderCriteria.getValueSortOrder() != null && !orderCriteria.getValueSortOrder().isEmpty()) {
-                    if (orderCriteria.getValueSortOrder().equalsIgnoreCase("ASC")) {
-                        criteriaQuery.orderBy(criteriaBuilder.asc(root.get(orderCriteria.getSortBy())));
-                    } else if (orderCriteria.getValueSortOrder().equalsIgnoreCase("DESC")) {
-                        criteriaQuery.orderBy(criteriaBuilder.desc(root.get(orderCriteria.getSortBy())));
-                    }
-                }
-            }
-        }
-
-        // Aplicar paginación
-        List<Libro> libros = entityManager.createQuery(criteriaQuery)
-                .setFirstResult(request.getPage().getPageIndex() * request.getPage().getPageSize())
-                .setMaxResults(request.getPage().getPageSize())
-                .getResultList();
-
-        // Convertir los libros a LibroDto
-        List<LibroDto> librosDto = new ArrayList<>();
-        for (Libro libro : libros) {
-            librosDto.add(convertirALibroDto(libro));
-        }
-
-        return librosDto;
-    }
-
-     */
     @PostMapping("/buscar-libros")
     public List<LibroDto> buscarLibros(@RequestBody BusquedaLibroRequest request) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
@@ -348,17 +243,23 @@ public class LibroRestController {
         libroDTO.setTitulo(libro.getTitulo());
         libroDTO.setAnoPublicacion(libro.getAnoPublicacion());
         libroDTO.setIsbn(libro.getIsbn());
-        libroDTO.setAutorId(libro.getAutor().getId());
-        libroDTO.setGeneroId(libro.getGenero().getId());
+        libroDTO.setIdAutor(libro.getAutor().getId());
+        libroDTO.setNombreAutor(libro.getAutor().getNombre());
+        libroDTO.setNombreGenero(libro.getGeneros().toString());
 
+        Set<Genero> generos = libro.getGeneros();
 
-        /*List<Long> generoIds = new ArrayList<>();
-        for (LibroGenero libroGenero : libro.getGeneros()) {
-            generoIds.add(libroGenero.getGenero().getId());
+        List<String> titulosGeneros = new ArrayList<>();
+
+        for (Genero genero : generos) {
+            titulosGeneros.add(genero.getNombre());
         }
-        libroDTO.setGeneroIds(generoIds);
 
-         */
+        String titulosGenerosString = String.join(", ", titulosGeneros);
+
+        libroDTO.setNombreGenero(titulosGenerosString);
+
+
 
         return libroDTO;
     }

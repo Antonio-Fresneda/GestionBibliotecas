@@ -2,8 +2,6 @@ package com.gestion.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.gestion.entities.NombreRol;
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -38,8 +36,13 @@ public class UsuarioDto {
     private Date fechaNacimiento;
 
     @NotNull
-    private NombreRol rol;
+    private String  rol;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String token;
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
 }

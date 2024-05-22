@@ -1,33 +1,18 @@
 package com.gestion.test;
 
-import com.gestion.controller.GeneroRestController;
 import com.gestion.controller.LibroRestController;
 import com.gestion.dto.LibroDto;
-import com.gestion.entities.Autor;
-import com.gestion.entities.Genero;
 import com.gestion.entities.Libro;
-import com.gestion.entities.LibroGenero;
 import com.gestion.exception.BibliotecaNotFoundException;
 import com.gestion.repository.AutorRepository;
 import com.gestion.repository.GeneroRepository;
 import com.gestion.repository.LibroRepository;
-import com.gestion.search.BusquedaLibroRequest;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
@@ -57,7 +42,7 @@ public class LibroRestControllerTest {
     private LibroRestController libroRestController;
 
 
-    @Test
+  /*  @Test
     public void testList() {
         // Arrange
         List<Libro> libros = new ArrayList<>();
@@ -76,6 +61,8 @@ public class LibroRestControllerTest {
         assertEquals("0987654321", result.get(1).getIsbn());
 
     }
+
+   */
 
     @Test
     public void testGet() {

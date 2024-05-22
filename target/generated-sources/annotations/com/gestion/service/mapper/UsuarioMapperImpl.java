@@ -1,7 +1,6 @@
 package com.gestion.service.mapper;
 
 import com.gestion.dto.UsuarioDto;
-import com.gestion.entities.NombreRol;
 import com.gestion.entities.Rol;
 import com.gestion.entities.Usuario;
 import javax.annotation.processing.Generated;
@@ -9,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2024-05-07T12:01:39+0200",
+    date = "2024-05-16T11:29:21+0200",
     comments = "version: 1.5.3.Final, compiler: javac, environment: Java 21.0.1 (Oracle Corporation)"
 )
 @Component
@@ -43,9 +42,9 @@ public class UsuarioMapperImpl implements UsuarioMapper {
 
         Usuario usuario = new Usuario();
 
+        usuario.setRol( stringToRol( usuarioDTO.getRol() ) );
         usuario.setId( usuarioDTO.getId() );
         usuario.setClave( usuarioDTO.getClave() );
-        usuario.setRol( nombreRolToRol( usuarioDTO.getRol() ) );
         usuario.setNombre( usuarioDTO.getNombre() );
         usuario.setApellidos( usuarioDTO.getApellidos() );
         usuario.setTelefono( usuarioDTO.getTelefono() );
@@ -55,7 +54,7 @@ public class UsuarioMapperImpl implements UsuarioMapper {
         return usuario;
     }
 
-    private NombreRol usuarioRolNombreRol(Usuario usuario) {
+    private String usuarioRolNombreRol(Usuario usuario) {
         if ( usuario == null ) {
             return null;
         }
@@ -63,22 +62,10 @@ public class UsuarioMapperImpl implements UsuarioMapper {
         if ( rol == null ) {
             return null;
         }
-        NombreRol nombreRol = rol.getNombreRol();
+        String nombreRol = rol.getNombreRol();
         if ( nombreRol == null ) {
             return null;
         }
         return nombreRol;
-    }
-
-    protected Rol nombreRolToRol(NombreRol nombreRol) {
-        if ( nombreRol == null ) {
-            return null;
-        }
-
-        Rol rol = new Rol();
-
-        rol.setNombreRol( nombreRol );
-
-        return rol;
     }
 }

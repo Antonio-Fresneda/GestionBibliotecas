@@ -84,13 +84,14 @@ public class GeneroRestController {
             Genero genero = findById.get();
 
             // Buscar todos los libros relacionados con el género
-            List<Libro> libros = libroRepository.findByGenero(genero);
+            //List<Libro> libros = libroRepository.findByGenerosContains(genero);
+
 
             // Eliminar la referencia al género en los libros
-            libros.forEach(libro -> libro.setGenero(null));
+            //libros.forEach(libro -> libro.setGeneros(null));
 
             // Guardar los cambios en los libros
-            libroRepository.saveAll(libros);
+            //libroRepository.saveAll(libros);
 
             // Finalmente, eliminar el género
             generoRepository.delete(genero);
@@ -176,48 +177,7 @@ public class GeneroRestController {
 
     @Autowired
     private EntityManager entityManager;
-   /* @PostMapping("/buscar-generos")
-    public List<GeneroDto> buscarGeneros(@RequestBody BusquedaLibroRequest request) {
-        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Genero> criteriaQuery = criteriaBuilder.createQuery(Genero.class);
-        Root<Genero> root = criteriaQuery.from(Genero.class);
 
-        // Aplicar criterios de búsqueda
-        Predicate predicate = criteriaBuilder.conjunction();
-        for (SearchCriteria criteria : request.getListSearchCriteria()) {
-            predicate = criteriaBuilder.and(predicate, getPredicate(criteria, criteriaBuilder, root));
-        }
-        criteriaQuery.where(predicate);
-
-        // Ordenar según criterios de orden
-        for (OrderCriteria orderCriteria : request.getListOrderCriteria()) {
-            if (orderCriteria.getSortBy() != null && !orderCriteria.getSortBy().isEmpty()) {
-                if (orderCriteria.getValueSortOrder() != null && !orderCriteria.getValueSortOrder().isEmpty()) {
-                    if (orderCriteria.getValueSortOrder().equalsIgnoreCase("ASC")) {
-                        criteriaQuery.orderBy(criteriaBuilder.asc(root.get(orderCriteria.getSortBy())));
-                    } else if (orderCriteria.getValueSortOrder().equalsIgnoreCase("DESC")) {
-                        criteriaQuery.orderBy(criteriaBuilder.desc(root.get(orderCriteria.getSortBy())));
-                    }
-                }
-            }
-        }
-
-        // Aplicar paginación
-        List<Genero> generos = entityManager.createQuery(criteriaQuery)
-                .setFirstResult(request.getPage().getPageIndex() * request.getPage().getPageSize())
-                .setMaxResults(request.getPage().getPageSize())
-                .getResultList();
-
-        // Convertir los géneros a GeneroDto
-        List<GeneroDto> generosDto = new ArrayList<>();
-        for (Genero genero : generos) {
-            generosDto.add(convertirAGeneroDto(genero));
-        }
-
-        return generosDto;
-    }
-
-    */
    @PostMapping("/buscar-generos")
    public List<GeneroDto> buscarGeneros(@RequestBody BusquedaLibroRequest request) {
        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();

@@ -23,7 +23,9 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
     @Query("SELECT a FROM Libro a WHERE a.autor = ?1")
     List<Libro> findAllByAutor(Autor autor);
 
-    List<Libro> findByGenero(Genero genero);
+    //List<Libro> findByGenero(Genero genero);
+
+   // List<Libro> findByGenerosContains(Genero genero);
 
     Page<Libro> findAllByTituloContaining(String titulo, Pageable pageable);
 

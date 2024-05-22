@@ -2,9 +2,7 @@ package com.gestion.entities;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,13 +12,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Data
 @Table(name = "Usuario")
 public class Usuario implements UserDetails {
-
 
     private static final long serialVersionUID = 1L;
 
@@ -43,14 +38,13 @@ public class Usuario implements UserDetails {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private Date fechaNacimiento;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "rol_id")
     private Rol rol;
 
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        GrantedAuthority authority = new SimpleGrantedAuthority(rol.getNombreRol().name());
+        GrantedAuthority authority = new SimpleGrantedAuthority(rol.getNombreRol());
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(authority);
         return authorities;
@@ -86,6 +80,7 @@ public class Usuario implements UserDetails {
         return true;
     }
 
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -94,12 +89,20 @@ public class Usuario implements UserDetails {
         this.id = id;
     }
 
-    public String getNombreUsuario() {
+    public String getNombre() {
         return nombre;
     }
 
-    public void setNombreUsuario(String nombreUsuario) {
-        this.nombre = nombreUsuario;
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getApellidos() {
+        return apellidos;
+    }
+
+    public void setApellidos(String apellidos) {
+        this.apellidos = apellidos;
     }
 
     public String getClave() {
@@ -110,12 +113,35 @@ public class Usuario implements UserDetails {
         this.clave = clave;
     }
 
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public Date getFechaNacimiento() {
+        return fechaNacimiento;
+    }
+
+    public void setFechaNacimiento(Date fechaNacimiento) {
+        this.fechaNacimiento = fechaNacimiento;
+    }
+
+    public Rol getRol() {
+        return rol;
+    }
 
     public void setRol(Rol rol) {
         this.rol = rol;
     }
-
-
-
 }
-

@@ -27,7 +27,7 @@ public interface GeneroRepository extends JpaRepository<Genero, Long>, JpaSpecif
     List<Genero> findAllByDescripcion(String descripcion);
 
     @Modifying
-    @Query("UPDATE Libro l SET l.genero = null WHERE l.id = :libroId")
+    @Query("UPDATE Libro l SET l.generos = null WHERE l.id = :libroId")
     void eliminarRelacionLibro(@Param("libroId") Long libroId);
     @Query("SELECT g FROM Genero g WHERE g.edadRecomendada = ?1")
     List<Genero> findAllByEdadRecomendada(String edadRecomendada);

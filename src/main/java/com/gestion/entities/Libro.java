@@ -1,15 +1,8 @@
 package com.gestion.entities;
 
-
 import jakarta.persistence.*;
 import lombok.Data;
-import org.ietf.jgss.GSSName;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-
 
 @Entity
 @Data
@@ -31,12 +24,12 @@ public class Libro {
     @JoinColumn(name = "autor_id")
     private Autor autor;
 
-    //@OneToMany(fetch = FetchType.LAZY, mappedBy = "libro", cascade = CascadeType.ALL, orphanRemoval = true)
-    //private List<LibroGenero> generos = new ArrayList<>();
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "libro-genero", joinColumns = {
+            @JoinColumn(name = "libro_id", nullable = true) }, inverseJoinColumns = {
+            @JoinColumn(name = "genero_id", nullable = true) })
+    private Set<Genero> generos;
 
-    @ManyToOne(cascade = CascadeType.DETACH, optional = true)
-    @JoinColumn(name = "genero_id")
-    private Genero genero;
 
     public Libro(long id, String titulo, int anoPublicacion, String isbn) {
         this.id = id;

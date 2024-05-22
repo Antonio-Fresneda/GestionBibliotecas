@@ -12,6 +12,7 @@ public class LibroDto {
     private String titulo;
     private int anoPublicacion;
     private String isbn;
-    private Long autorId;
-    private Long generoId;
+    private Long idAutor;
+    private String NombreAutor;
+    private String nombreGenero;
 }

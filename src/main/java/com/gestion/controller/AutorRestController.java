@@ -145,47 +145,6 @@ public class AutorRestController {
     @Autowired
     private EntityManager entityManager;
 
-    /*@PostMapping("/buscar-autores")
-    public List<AutorDto> buscarAutores(@RequestBody BusquedaLibroRequest request) {
-        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Autor> criteriaQuery = criteriaBuilder.createQuery(Autor.class);
-        Root<Autor> root = criteriaQuery.from(Autor.class);
-
-        Predicate predicate = criteriaBuilder.conjunction();
-        for (SearchCriteria criteria : request.getListSearchCriteria()) {
-            predicate = criteriaBuilder.and(predicate, getPredicate(criteria, criteriaBuilder, root));
-        }
-        criteriaQuery.where(predicate);
-
-        for (OrderCriteria orderCriteria : request.getListOrderCriteria()) {
-            if (orderCriteria.getSortBy() != null && !orderCriteria.getSortBy().isEmpty()) {
-                if (orderCriteria.getValueSortOrder() != null && !orderCriteria.getValueSortOrder().isEmpty()) {
-                    if (orderCriteria.getValueSortOrder().equalsIgnoreCase("ASC")) {
-                        criteriaQuery.orderBy(criteriaBuilder.asc(root.get(orderCriteria.getSortBy())));
-                    } else if (orderCriteria.getValueSortOrder().equalsIgnoreCase("DESC")) {
-                        criteriaQuery.orderBy(criteriaBuilder.desc(root.get(orderCriteria.getSortBy())));
-                    }
-                }
-            }
-        }
-
-
-        List<Autor> autores = entityManager.createQuery(criteriaQuery)
-                .setFirstResult(request.getPage().getPageIndex() * request.getPage().getPageSize())
-                .setMaxResults(request.getPage().getPageSize())
-                .getResultList();
-
-        // Convertir los autores a AutorDto
-        List<AutorDto> autoresDto = new ArrayList<>();
-        for (Autor autor : autores) {
-            autoresDto.add(convertirAAutorDto(autor));
-        }
-
-        return autoresDto;
-    }
-
-     */
-
     @PostMapping("/buscar-autores")
     public List<AutorDto> buscarAutores(@RequestBody BusquedaLibroRequest request) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
