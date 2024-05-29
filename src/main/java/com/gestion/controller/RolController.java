@@ -8,6 +8,7 @@ import com.gestion.exception.BibliotecaNotFoundException;
 import com.gestion.repository.RolRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +25,7 @@ public class RolController {
     @Autowired
     private RolRepository rolRepository;
 
+    @PreAuthorize("hasAnyAuthority('LEER_ROL','ESCRIBIR_ROL')")
     @GetMapping()
     public List<RolDto> list() {
         List<Rol> roles = rolRepository.findAll();
@@ -34,7 +36,7 @@ public class RolController {
         return rolDtos;
     }
 
-
+    @PreAuthorize("hasAuthority('ESCRIBIR_ROL')")
     @Transactional
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable(name = "id") long id) {
@@ -47,12 +49,15 @@ public class RolController {
             throw new BibliotecaNotFoundException("Rol not found with id: " + id);
         }
     }
+
+    @PreAuthorize("hasAuthority('ESCRIBIR_ROL')")
     @PostMapping
     public ResponseEntity<?> post(@RequestBody Rol input) {
         Rol save = rolRepository.save(input);
         return ResponseEntity.ok(save);
     }
 
+    @PreAuthorize("hasAuthority('ESCRIBIR_ROL')")
     @PutMapping("/{id}")
     public ResponseEntity<?> put(@PathVariable(name = "id") long id, @RequestBody Rol input) {
         Rol find = rolRepository.findById(id).orElse(null);

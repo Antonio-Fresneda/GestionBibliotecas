@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -36,6 +37,7 @@ public class AuthController {
     @Autowired
     private RolRepository rolRepository;
 
+    @PreAuthorize("hasAnyAuthority('LEER_USUARIOS','ESCRIBIR_USUARIOS')")
     @GetMapping()
     public List<UsuarioDto> list() {
         return usuarioRepository.findAll().stream()
@@ -43,6 +45,7 @@ public class AuthController {
                 .collect(Collectors.toList());
     }
 
+    @PreAuthorize("hasAuthority('ESCRIBIR_USUARIOS')")
     @PutMapping("/{id}")
     public ResponseEntity<?> put(@PathVariable(name = "id") long id, @RequestBody UsuarioDto input) throws Exception {
         Usuario find = usuarioRepository.findById(id).orElse(null);
@@ -64,7 +67,7 @@ public class AuthController {
         return ResponseEntity.ok(save);
     }
 
-
+    @PreAuthorize("hasAuthority('ESCRIBIR_USUARIOS')")
     @Transactional
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable(name = "id") long id) {
@@ -87,16 +90,48 @@ public class AuthController {
         usuarioDto.setTelefono(usuario.getTelefono());
         usuarioDto.setFechaNacimiento(usuario.getFechaNacimiento());
         usuarioDto.setRol(usuario.getRol().getNombreRol());
+
+        Set<Permisos> permisos= usuario.getRol().getPermisos();
+        List<String> permisosUsuario=new ArrayList<>();
+        for(Permisos permiso :permisos){
+            permisosUsuario.add(permiso.getNombre());
+        }
+        String permisosUsuarioString = String.join(", ",permisosUsuario);
+        usuarioDto.setPermisos(permisosUsuarioString);
+
         return usuarioDto;
     }
-    @PostMapping("/login")
+    /*@PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody UsuarioLoginDto usuarioLogin, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return new ResponseEntity<String>("El usuario y la clave son obligatorios", HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<UsuarioDto>(usuarioService.login(usuarioLogin), HttpStatus.OK);
+    }*/
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody UsuarioLoginDto usuarioLogin, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return new ResponseEntity<String>("El usuario y la clave son obligatorios", HttpStatus.BAD_REQUEST);
+        }
+        UsuarioDto usuarioDto = usuarioService.login(usuarioLogin);
+        return new ResponseEntity<UsuarioDto>(usuarioDto, HttpStatus.OK);
     }
 
+
+
+    @PostMapping("/registrar")
+    public ResponseEntity<?> registrar(@Valid @RequestBody UsuarioDto usuario, BindingResult validaciones)
+            throws Exception {
+        if (validaciones.hasErrors()) {
+            return new ResponseEntity<String>("Campos Imcompletos", HttpStatus.BAD_REQUEST);
+        }
+        try {
+            return new ResponseEntity<UsuarioDto>(usuarioService.crear(usuario), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    @PreAuthorize("hasAuthority('ESCRIBIR_USUARIOS')")
     @PostMapping("/crear")
     public ResponseEntity<?> crear(@Valid @RequestBody UsuarioDto usuario, BindingResult validaciones)
             throws Exception {

@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,9 +43,11 @@ public class AutorRestController {
 
 
     @GetMapping()
+    @PreAuthorize("hasAnyAuthority('LEER_AUTOR', 'ESCRIBIR_AUTOR')")
     public List<Autor> list() {
         return autorRepository.findAll();
     }
+
 
     @GetMapping("/count")
     public ResponseEntity<Long> count() {
@@ -55,7 +58,7 @@ public class AutorRestController {
     public Autor get(@PathVariable(name = "id") long id) {
         return autorRepository.findById(id).orElseThrow(() -> new BibliotecaNotFoundException("Autor not found with id: " + id));
     }
-
+    @PreAuthorize("hasAuthority('ESCRIBIR_AUTOR')")
     @PutMapping("/{id}")
     public ResponseEntity<?> put(@PathVariable(name = "id") long id, @RequestBody Autor input) {
         Autor find = autorRepository.findById(id).orElseThrow(() -> new BibliotecaNotFoundException("Autor not found with id: " + id));
@@ -66,7 +69,7 @@ public class AutorRestController {
         return ResponseEntity.ok(save);
     }
 
-
+    @PreAuthorize("hasAuthority('ESCRIBIR_AUTOR')")
     @PostMapping
     public ResponseEntity<?> post(@RequestBody Autor input) {
         Autor save = autorRepository.save(input);
@@ -74,7 +77,7 @@ public class AutorRestController {
     }
 
 
-
+    @PreAuthorize("hasAuthority('ESCRIBIR_AUTOR')")
     @Transactional
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable(name = "id") long id) {
@@ -89,6 +92,7 @@ public class AutorRestController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('LEER_AUTOR', 'ESCRIBIR_AUTOR')")
     @GetMapping("/autores")
     public List<AutorDto> getAutores(
             @RequestParam(name = "nombre", required = false) String nombre,
@@ -145,6 +149,7 @@ public class AutorRestController {
     @Autowired
     private EntityManager entityManager;
 
+    @PreAuthorize("hasAnyAuthority('LEER_AUTOR', 'ESCRIBIR_AUTOR')")
     @PostMapping("/buscar-autores")
     public List<AutorDto> buscarAutores(@RequestBody BusquedaLibroRequest request) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();

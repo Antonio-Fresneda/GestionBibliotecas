@@ -38,6 +38,8 @@ public class UsuarioDto {
     @NotNull
     private String  rol;
 
+    private String permisos;
+
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private String token;
 

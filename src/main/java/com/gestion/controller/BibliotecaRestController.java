@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,7 +42,7 @@ public class BibliotecaRestController {
     GeneroRepository generoRepository;
 
 
-
+    @PreAuthorize("hasAnyAuthority('ESCRIBIR_BIBLIOTECA','LEER_BIBLIOTECA')")
     @GetMapping()
     public List<BibliotecaDto> getAll() {
         List<Biblioteca> bibliotecas = bibliotecaRepository.findAll();
@@ -63,6 +64,7 @@ public class BibliotecaRestController {
         return convertToDto(biblioteca);
     }
 
+    @PreAuthorize("hasAuthority('ESCRIBIR_BIBLIOTECA')")
     @PutMapping("/{id}")
     public ResponseEntity<?> put(@PathVariable(name = "id") long id, @RequestBody Biblioteca input) {
         Biblioteca biblioteca = bibliotecaRepository.findById(id)
@@ -77,12 +79,14 @@ public class BibliotecaRestController {
         return ResponseEntity.ok(convertToDto(savedBiblioteca));
     }
 
+    @PreAuthorize("hasAuthority('ESCRIBIR_BIBLIOTECA')")
     @PostMapping
     public ResponseEntity<?> post(@RequestBody Biblioteca input) {
         Biblioteca save = bibliotecaRepository.save(input);
         return ResponseEntity.ok((save));
     }
 
+    @PreAuthorize("hasAuthority('ESCRIBIR_BIBLIOTECA')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteBiblioteca(@PathVariable(name = "id") long id) {
         Optional<Biblioteca> bibliotecaOptional = bibliotecaRepository.findById(id);
@@ -90,19 +94,16 @@ public class BibliotecaRestController {
             throw new BibliotecaNotFoundException("Biblioteca with id " + id + " not found");
         }
 
-        // Eliminar la relación entre la biblioteca y los libros
         Biblioteca biblioteca = bibliotecaOptional.get();
         biblioteca.getLibros().clear();
         bibliotecaRepository.save(biblioteca);
-
-        // Eliminar la biblioteca
         bibliotecaRepository.deleteById(id);
 
         return ResponseEntity.ok().build();
     }
 
 
-
+    @PreAuthorize("hasAnyAuthority('ESCRIBIR_BIBLIOTECA','LEER_BIBLIOTECA')")
     @GetMapping("/filtros")
     public Page<BibliotecaDto> busquedaDinamica(
             @RequestParam(name = "nombre", required = false) String nombre,
@@ -154,6 +155,7 @@ public class BibliotecaRestController {
     @Autowired
     private EntityManager entityManager;
 
+    @PreAuthorize("hasAnyAuthority('ESCRIBIR_BIBLIOTECA','LEER_BIBLIOTECA')")
     @PostMapping("/buscar-bibliotecas")
     public List<BibliotecaDto> buscarBibliotecas(@RequestBody BusquedaLibroRequest request) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
@@ -239,13 +241,11 @@ public class BibliotecaRestController {
         bibliotecaDto.setEmail(biblioteca.getEmail());
         bibliotecaDto.setSitioWeb(biblioteca.getSitioWeb());
 
-        // Obtenemos el conjunto de libros de la biblioteca
+
         Set<Libro> libros = biblioteca.getLibros();
 
-        // Creamos una lista para almacenar los títulos de los libros
         List<String> titulosLibros = new ArrayList<>();
 
-        // Iteramos sobre cada libro y obtenemos su título
         for (Libro libro : libros) {
             titulosLibros.add(libro.getTitulo());
         }

@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface LibroRepository extends JpaRepository<Libro, Long> {
+
     @Query("SELECT a FROM Libro a WHERE a.titulo = ?1")
     Libro findByTitulo(String titulo);
 

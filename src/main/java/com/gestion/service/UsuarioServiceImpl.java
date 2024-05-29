@@ -3,6 +3,7 @@ package com.gestion.service;
 
 import com.gestion.dto.UsuarioDto;
 import com.gestion.dto.UsuarioLoginDto;
+import com.gestion.entities.Permisos;
 import com.gestion.entities.Rol;
 import com.gestion.entities.Usuario;
 import com.gestion.jwt.JwtProvider;
@@ -20,6 +21,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -52,9 +56,28 @@ public class UsuarioServiceImpl implements UsuarioService {
 		return usuarioMapper.toUsuarioDTO(usuario);
 
 	}
-
-
 	@Override
+	public UsuarioDto login(UsuarioLoginDto usuarioLoginDTO) {
+		Authentication auth = authenticationManager.authenticate(
+				new UsernamePasswordAuthenticationToken(usuarioLoginDTO.getEmail(), usuarioLoginDTO.getClave()));
+		SecurityContextHolder.getContext().setAuthentication(auth);
+
+		String token = JwtProvider.generarTokenJWT(usuarioLoginDTO.getEmail());
+
+		Usuario usuario = usuarioRepository.findByEmail(usuarioLoginDTO.getEmail()).orElse(null);
+		UsuarioDto usuarioDTO = usuarioMapper.toUsuarioDTO(usuario);
+		usuarioDTO.setToken(token);
+
+		Set<Permisos> permisos = usuario.getRol().getPermisos();
+		List<String> permisosUsuario = permisos.stream().map(Permisos::getNombre).collect(Collectors.toList());
+		String permisosUsuarioString = String.join(", ", permisosUsuario);
+		usuarioDTO.setPermisos(permisosUsuarioString);
+
+		return usuarioDTO;
+	}
+
+
+	/*@Override
 	public UsuarioDto login(UsuarioLoginDto usuarioLoginDTO) {
 		Authentication auth = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(usuarioLoginDTO.getEmail(), usuarioLoginDTO.getClave()));
@@ -69,5 +92,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 		usuarioDTO.setToken(token);
 		return usuarioDTO;
 	}
+
+	 */
 
 }

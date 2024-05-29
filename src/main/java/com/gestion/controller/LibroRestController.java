@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -41,8 +42,8 @@ public class LibroRestController {
     @Autowired
     BibliotecaRepository bibliotecaRepository;
 
-
-   @GetMapping()
+    @PreAuthorize("hasAnyAuthority('LEER_LIBROS', 'ESCRIBIR_LIBROS')")
+    @GetMapping()
     public List<LibroDto> list() {
         List<Libro> libros = libroRepository.findAll();
         List<LibroDto> libroDTOs = new ArrayList<>();
@@ -51,8 +52,6 @@ public class LibroRestController {
         }
         return libroDTOs;
     }
-
-
 
     @GetMapping("/count")
     public ResponseEntity<Long> count() {
@@ -66,6 +65,7 @@ public class LibroRestController {
         return convertToDto(libro);
     }
 
+    @PreAuthorize("hasAuthority('ESCRIBIR_LIBROS')")
     @PutMapping("/{id}")
     public ResponseEntity<?> put(@PathVariable(name = "id") long id, @RequestBody Libro input) {
         Libro find = libroRepository.findById(id).orElseThrow(() -> new BibliotecaNotFoundException("Libro not found with id: " + id));
@@ -80,12 +80,15 @@ public class LibroRestController {
         Libro save = libroRepository.save(find);
         return ResponseEntity.ok(save);
     }
+
+    @PreAuthorize("hasAuthority('ESCRIBIR_LIBROS')")
     @PostMapping
     public ResponseEntity<?> post(@RequestBody Libro input) {
         Libro save = libroRepository.save(input);
         return ResponseEntity.ok((save));
     }
 
+    @PreAuthorize("hasAuthority('ESCRIBIR_LIBROS')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteLibro(@PathVariable(name = "id") long id) {
         Optional<Libro> libroOptional = libroRepository.findById(id);
@@ -98,6 +101,7 @@ public class LibroRestController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasAnyAuthority('LEER_LIBROS', 'ESCRIBIR_LIBROS')")
     @GetMapping("/libros")
     public List<LibroDto> getLibros(
             @RequestParam(name = "titulo", required = false) String titulo,
@@ -145,6 +149,7 @@ public class LibroRestController {
     @Autowired
     private EntityManager entityManager;
 
+    @PreAuthorize("hasAnyAuthority('LEER_LIBROS', 'ESCRIBIR_LIBROS')")
     @PostMapping("/buscar-libros")
     public List<LibroDto> buscarLibros(@RequestBody BusquedaLibroRequest request) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();

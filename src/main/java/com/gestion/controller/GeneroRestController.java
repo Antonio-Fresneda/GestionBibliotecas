@@ -18,6 +18,7 @@ import org.springframework.data.domain.*;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -33,7 +34,7 @@ public class GeneroRestController {
     @Autowired
     LibroRepository libroRepository;
 
-
+    @PreAuthorize("hasAnyAuthority('LEER_GENERO','ESCRIBIR_GENERO')")
     @GetMapping()
     public List<GeneroDto> list() {
         List<Genero> generos = generoRepository.findAll();
@@ -55,7 +56,7 @@ public class GeneroRestController {
         }
     }
 
-
+    @PreAuthorize("hasAuthority('ESCRIBIR_GENERO')")
     @PutMapping("/{id}")
     public ResponseEntity<?> put(@PathVariable(name = "id") long id, @RequestBody Genero input) {
         Genero find = generoRepository.findById(id).orElse(null);
@@ -71,29 +72,19 @@ public class GeneroRestController {
         return ResponseEntity.ok(convertToDto(save));
     }
 
+    @PreAuthorize("hasAuthority('ESCRIBIR_GENERO')")
     @PostMapping
     public ResponseEntity<?> post(@RequestBody Genero input) {
         Genero save = generoRepository.save(input);
         return ResponseEntity.ok((save));
     }
 
+    @PreAuthorize("hasAuthority('ESCRIBIR_GENERO')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable(name = "id") long id) {
         Optional<Genero> findById = generoRepository.findById(id);
         if (findById.isPresent()) {
             Genero genero = findById.get();
-
-            // Buscar todos los libros relacionados con el género
-            //List<Libro> libros = libroRepository.findByGenerosContains(genero);
-
-
-            // Eliminar la referencia al género en los libros
-            //libros.forEach(libro -> libro.setGeneros(null));
-
-            // Guardar los cambios en los libros
-            //libroRepository.saveAll(libros);
-
-            // Finalmente, eliminar el género
             generoRepository.delete(genero);
 
             return ResponseEntity.ok().build();
@@ -102,7 +93,7 @@ public class GeneroRestController {
         }
     }
 
-
+    @PreAuthorize("hasAnyAuthority('ESCRIBIR_GENERO','LEER_GENERO')")
     @GetMapping("/generos")
     public List<GeneroDto> getGeneros(
             @RequestParam(name = "nombre", required = false) String nombre,
@@ -178,7 +169,10 @@ public class GeneroRestController {
     @Autowired
     private EntityManager entityManager;
 
-   @PostMapping("/buscar-generos")
+
+
+    @PreAuthorize("hasAnyAuthority('ESCRIBIR_GENERO','LEER_GENERO')")
+    @PostMapping("/buscar-generos")
    public List<GeneroDto> buscarGeneros(@RequestBody BusquedaLibroRequest request) {
        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
        CriteriaQuery<Genero> criteriaQuery = criteriaBuilder.createQuery(Genero.class);
