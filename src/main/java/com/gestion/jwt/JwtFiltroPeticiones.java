@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -35,12 +36,14 @@ public class JwtFiltroPeticiones extends OncePerRequestFilter {
 					UserDetails userDetail = detalleUsuario.loadUserByUsername(nombreUsuario);
 					UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetail, null,
 							userDetail.getAuthorities());
-
+					auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 					SecurityContextHolder.getContext().setAuthentication(auth);
 				}
 			}
 		} catch (Exception e) {
 			logger.error("Error al procesar el token JWT", e);
+			response.sendError(HttpServletResponse.SC_FORBIDDEN, "Acceso denegado: " + e.getMessage());
+			return; // Termina el procesamiento y no continúa con la cadena de filtros
 		}
 
 		filterChain.doFilter(request, response);

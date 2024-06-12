@@ -3,6 +3,7 @@ package com.gestion.exception;
 import com.gestion.common.StandarizedApiExceptionResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -15,7 +16,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler(UnknownHostException.class)
     public ResponseEntity<StandarizedApiExceptionResponse> handleUnknownHostException(UnknownHostException ex) {
         StandarizedApiExceptionResponse response = new StandarizedApiExceptionResponse("Error de conexion","erorr-1024",ex.getMessage());
-        return new ResponseEntity(response, HttpStatus.PARTIAL_CONTENT);
+        return new ResponseEntity<>(response, HttpStatus.PARTIAL_CONTENT);
     }
 
     @ExceptionHandler(BibliotecaNotFoundException.class)
@@ -28,6 +29,11 @@ public class ApiExceptionHandler {
         StringBuilder errorMessage = new StringBuilder();
         ex.getBindingResult().getFieldErrors().forEach(error -> errorMessage.append(error.getField()).append(": ").append(error.getDefaultMessage()).append("\n"));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage.toString());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Forbidden: " + ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

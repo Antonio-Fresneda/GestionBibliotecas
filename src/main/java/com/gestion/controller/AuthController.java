@@ -9,6 +9,7 @@ import com.gestion.entities.*;
 import com.gestion.exception.BibliotecaNotFoundException;
 import com.gestion.repository.RolRepository;
 import com.gestion.repository.UsuarioRepository;
+import com.gestion.service.EmailService;
 import com.gestion.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class AuthController {
     private UsuarioService usuarioService;
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     @Autowired
     private RolRepository rolRepository;
@@ -101,13 +105,7 @@ public class AuthController {
 
         return usuarioDto;
     }
-    /*@PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody UsuarioLoginDto usuarioLogin, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            return new ResponseEntity<String>("El usuario y la clave son obligatorios", HttpStatus.BAD_REQUEST);
-        }
-        return new ResponseEntity<UsuarioDto>(usuarioService.login(usuarioLogin), HttpStatus.OK);
-    }*/
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody UsuarioLoginDto usuarioLogin, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -119,7 +117,7 @@ public class AuthController {
 
 
 
-    @PostMapping("/registrar")
+    /*@PostMapping("/registrar")
     public ResponseEntity<?> registrar(@Valid @RequestBody UsuarioDto usuario, BindingResult validaciones)
             throws Exception {
         if (validaciones.hasErrors()) {
@@ -131,6 +129,23 @@ public class AuthController {
             return new ResponseEntity<String>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+     */
+    @PostMapping("/registrar")
+    public ResponseEntity<?> registrar(@Valid @RequestBody UsuarioDto usuario, BindingResult validaciones)
+            throws Exception {
+        if (validaciones.hasErrors()) {
+            return new ResponseEntity<>("Campos Imcompletos", HttpStatus.BAD_REQUEST);
+        }
+        try {
+            UsuarioDto nuevoUsuario = usuarioService.crear(usuario);
+            emailService.sendEmail(nuevoUsuario.getEmail(), "Bienvenido a nuestra plataforma", "Gracias por registrarte en nuestra aplicación!");
+            return new ResponseEntity<>(nuevoUsuario, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @PreAuthorize("hasAuthority('ESCRIBIR_USUARIOS')")
     @PostMapping("/crear")
     public ResponseEntity<?> crear(@Valid @RequestBody UsuarioDto usuario, BindingResult validaciones)

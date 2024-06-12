@@ -4,7 +4,6 @@ import com.gestion.jwt.JwtAccesoDenegadoError;
 import com.gestion.jwt.JwtAutenticacionError;
 import com.gestion.jwt.JwtFiltroPeticiones;
 import com.gestion.service.DetalleUsuarioImpl;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +17,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
 
 @Configuration
 @EnableWebSecurity
@@ -40,12 +38,15 @@ public class SpringSecurity {
     }
 
     @Bean
-    BCryptPasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
+    BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
@@ -53,7 +54,9 @@ public class SpringSecurity {
                     authConfig.requestMatchers("/usuario/login").permitAll();
                     authConfig.requestMatchers("/usuario/registrar").permitAll();
                     authConfig.anyRequest().authenticated();
-                }).exceptionHandling(exception -> exception.authenticationEntryPoint(jwtAutenticacionError)
+                })
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(jwtAutenticacionError)
                         .accessDeniedHandler(jwtAccesoDenegadoError))
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
@@ -62,13 +65,4 @@ public class SpringSecurity {
 
         return http.build();
     }
-
-
-
-
 }
-
-
-
-
-
